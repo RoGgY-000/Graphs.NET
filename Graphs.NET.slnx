@@ -1,3 +1,8 @@
 <Solution>
-  <Project Path="Graphs.NET/Graphs.NET.csproj" />
+  <Folder Name="/src/">
+    <Project Path="Graphs.NET/Graphs.NET.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="GraphUnitTests/GraphUnitTests.csproj" />
+  </Folder>
 </Solution>
