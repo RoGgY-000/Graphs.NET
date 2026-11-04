@@ -1,34 +1,23 @@
 ﻿using System.Runtime.CompilerServices;
-using Graphs.NET.Abstractions;
-
 namespace Graphs.NET
 {
-	public class GraphBuilder<TEdgeWeight, TVertexData>
-		where TEdgeWeight : IComparable<TEdgeWeight> 
+	public class GraphBuilder
 	{
-		private const int MinCapacity = 4;
+		protected const int MinCapacity = 4;
 
-		public bool HasWeight { get; }
-		public bool HasVertexData { get; }
-
-		public int VertexCount { get; private set; }
-		public int EdgeCount { get; private set; }
-		public int EdgeCapacity { get; private set; }
+		public int VertexCount { get; protected set; }
+		public int EdgeCount { get; protected set; }
+		public int EdgeCapacity { get; protected set; }
 
 		private int _vertexCapacity;
 		private int[] _heads;
 		private int[] _targets;
 		private int[] _nexts;
-		private TEdgeWeight[]? _weights;
-		private TVertexData[]? _data;
 
 		public GraphBuilder (int v = 0, int u = 0)
 		{
 			ArgumentOutOfRangeException.ThrowIfNegative(v);
 			ArgumentOutOfRangeException.ThrowIfNegative(u);
-
-			HasVertexData = typeof(TVertexData) != typeof(Empty);
-			HasWeight = typeof(TEdgeWeight) != typeof(Empty);
 
 			EnsureVertexCount(v);
 			EnsureEdgeCapacity(Math.Max(u, MinCapacity));
@@ -40,17 +29,157 @@ namespace Graphs.NET
 			ArgumentOutOfRangeException.ThrowIfNegative(from);
 			ArgumentOutOfRangeException.ThrowIfNegative(to);
 
-			if ( HasWeight
-				|| _weights != null )
-			{
-				throw new InvalidOperationException();
-			}
-
 			EnsureVertexCount(Math.Max(from, to) + 1);
 			EnsureEdgeCapacity(EdgeCount + 1);
 
-            InsertArc(from, to);
-        }
+			InsertArc(from, to);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void AddEdge (int v1, int v2)
+		{
+			ArgumentOutOfRangeException.ThrowIfNegative(v1);
+			ArgumentOutOfRangeException.ThrowIfNegative(v2);
+
+			EnsureVertexCount(Math.Max(v1, v2) + 1);
+			EnsureEdgeCapacity(EdgeCount + 2);
+
+			InsertArc(v1, v2);
+			InsertArc(v2, v1);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Graph Build () => Build(GraphBuildingOptions.Default);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Graph Build (GraphBuildingOptionsFixed options)
+		{
+			if ( VertexCount == 0 )
+			{
+				return Graph.Empty;
+			}
+
+			int[] offsets = new int[VertexCount + 1];
+			int[] _targets = new int[EdgeCount];
+			offsets[VertexCount] = EdgeCount;
+
+			bool addReflexive = !options.alwaysReflexiveArcs && options.enableReflexiveArcs;
+
+			offsets[0] = 0;
+			int pointer = _heads[0];
+			int current = 0;
+			while ( pointer != -1 )
+			{
+				if ( addReflexive
+					|| (options.alwaysReflexiveArcs
+					&& this._targets[pointer] != 0) )
+				{
+					_targets[current] = this._targets[pointer];
+					current++;
+				}
+				pointer = _nexts[pointer];
+			}
+
+			for ( int i = 1; i < VertexCount; i++ )
+			{
+				offsets[i] = offsets[i - 1] + current;
+				pointer = _heads[i];
+				current = 0;
+				while ( pointer != -1 )
+				{
+					if ( addReflexive
+						|| (options.alwaysReflexiveArcs
+						&& this._targets[pointer] != i) )
+					{
+						_targets[offsets[i] + current] = this._targets[pointer];
+						current++;
+					}
+					pointer = _nexts[pointer];
+				}
+			}
+			Graph g = new(offsets, _targets, options);
+			return g;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void EnsureEdgeCapacity (int capacity)
+		{
+			ArgumentOutOfRangeException.ThrowIfNegative(capacity);
+
+			if ( capacity <= EdgeCapacity )
+			{
+				return;
+			}
+			else
+			{
+				EdgeCapacity = MinCapacity;
+				while ( EdgeCapacity < capacity )
+				{
+					EdgeCapacity *= 2;
+				}
+				Array.Resize(ref _targets, EdgeCapacity);
+				Array.Resize(ref _nexts, EdgeCapacity);
+				_nexts.AsSpan(EdgeCount, EdgeCapacity - EdgeCount).Fill(-1);
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void EnsureVertexCount (int count)
+		{
+			ArgumentOutOfRangeException.ThrowIfNegative(count);
+
+			if ( count <= VertexCount )
+			{
+				return;
+			}
+			else if ( count <= _vertexCapacity )
+			{
+				VertexCount = count;
+			}
+			else
+			{
+				_vertexCapacity = MinCapacity;
+				while ( _vertexCapacity < count )
+				{
+					_vertexCapacity *= 2;
+				}
+				Array.Resize(ref _heads, _vertexCapacity);
+				_heads.AsSpan(VertexCount, _vertexCapacity - VertexCount).Fill(-1);
+				VertexCount = count;
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void InsertArc (int from, int to)
+		{
+			_targets[EdgeCount] = to;
+			_nexts[EdgeCount] = _heads[from];
+			_heads[from] = EdgeCount;
+			EdgeCount++;
+		}
+	}
+
+	public class GraphBuilder<TEdgeWeight, TVertexData>
+		: GraphBuilder
+		where TEdgeWeight : IComparable<TEdgeWeight>
+		where TVertexData : IComparable<TVertexData>
+	{
+
+		public bool HasWeight { get; }
+		public bool HasVertexData { get; }
+
+		private int _vertexCapacity;
+		private int[] _heads;
+		private int[] _targets;
+		private int[] _nexts;
+		private TEdgeWeight[]? _weights;
+		private TVertexData[]? _data;
+
+		public GraphBuilder (int v = 0, int u = 0) : base(v, u)
+		{
+			HasVertexData = typeof(TVertexData) != typeof(Nothing);
+			HasWeight = typeof(TEdgeWeight) != typeof(Nothing);
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void AddArc (int from, int to, TEdgeWeight w)
@@ -70,25 +199,6 @@ namespace Graphs.NET
 
             InsertArc(from, to, w);
         }
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void AddEdge (int v1, int v2)
-        {
-            ArgumentOutOfRangeException.ThrowIfNegative(v1);
-            ArgumentOutOfRangeException.ThrowIfNegative(v2);
-
-            if ( HasWeight
-                || _weights != null )
-            {
-                throw new InvalidOperationException();
-            }
-
-            EnsureVertexCount(Math.Max(v1, v2)+1);
-            EnsureEdgeCapacity(EdgeCount + 2);
-
-            InsertArc(v1, v2);
-            InsertArc(v2, v1);
-		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void AddEdge (int v1, int v2, TEdgeWeight w)
@@ -124,9 +234,9 @@ namespace Graphs.NET
 			_data[v] = d;
 		}
 
-		public Graph<TEdgeWeight, TVertexData> Build () => Build(GraphBuildingOptions.Default);
+		public Graph<TEdgeWeight, TVertexData> BuildWithEdgeWeightsAndVertexData () => BuildWithEdgeWeightsAndVertexData(GraphBuildingOptions.Default);
 
-		public Graph<TEdgeWeight, TVertexData> Build (GraphBuildingOptionsFixed options)
+		public Graph<TEdgeWeight, TVertexData> BuildWithEdgeWeightsAndVertexData (GraphBuildingOptionsFixed options)
 		{
 			int[] offsets = new int[VertexCount + 1];
 			int[] _targets = new int[EdgeCount];

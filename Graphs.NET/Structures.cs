@@ -1,8 +1,8 @@
 ﻿namespace Graphs.NET
 {
-	public struct Empty : IComparable<Empty>
+	public struct Nothing : IComparable<Nothing>
 	{
-		public readonly int CompareTo (Empty other) => 0;
+		public readonly int CompareTo (Nothing other) => 0;
 	}
 
 	public readonly struct GraphBuildingOptionsFixed

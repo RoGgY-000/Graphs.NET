@@ -1,8 +1,12 @@
 <Solution>
+  <Folder Name="/Benchmarks/">
+    <Project Path="Benchmarks/Benchmarks.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="Graphs.NET/Graphs.NET.csproj" />
   </Folder>
   <Folder Name="/Tests/">
-    <Project Path="GraphUnitTests/GraphUnitTests.csproj" />
+    <Project Path="Tests/GraphTests.csproj" />
+    <Project Path="TwoBitArrayTests/TwoBitArrayTests.csproj" Id="8cab5d19-64a9-489e-b556-1f42ec8dc6cd" />
   </Folder>
 </Solution>
