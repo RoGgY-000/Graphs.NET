@@ -2,7 +2,7 @@
 
 namespace TwoBitArrayTests
 {
-	public class UnitTests
+	public class TwoBitArrayTests
 	{
 		[Fact]
 		public void ReadingOneZeroElementTwoBitArrayTest ()

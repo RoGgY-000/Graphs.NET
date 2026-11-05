@@ -1,424 +1,122 @@
 ﻿using Graphs.NET;
+using Tests;
 
-namespace GraphUnitTests
+namespace GraphTests
 {
 	public class GraphWithoutWeightsAndDataTests
 	{
 		[Fact]
-		public void EmptyGraphTests ()
+		public void EmptyGraphEqualityTests ()
 		{
-			Graph empty = Graph.Empty;
+			Graph empty1 = Graph<Nothing, Nothing>.GetEmpty();
+			Graph empty2 = Graph<Nothing, Nothing>.GetEmpty();
 
-			Assert.Equal(0, empty.VertexCount);
-			Assert.Equal(0, empty.ArcCount);
-			Assert.Equal(0f, empty.AverageVertexDegree);
-			//Assert.Equal(0f, empty.Density);
-			Assert.Equal(0, empty.DuplicateArcCount);
-			//Assert.Equal(0, empty.MaxVertexDegree);
-			Assert.Equal(0, empty.ReflexiveVertexCount);
+			ReferenceEquals(empty1, empty2);
 
-			Assert.Throws<ArgumentOutOfRangeException>(() => empty.GetNeighbors(-1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => empty.GetNeighbors(0));
-			Assert.Throws<ArgumentOutOfRangeException>(() => empty.GetNeighbors(1));
+			Graph empty3 = Graph<int, Nothing>.GetEmpty();
+			Graph empty4 = Graph<int, Nothing>.GetEmpty();
 
-			Assert.Throws<ArgumentOutOfRangeException>(() => empty.HasArc(-1, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => empty.HasArc(-1, 0));
-			Assert.Throws<ArgumentOutOfRangeException>(() => empty.HasArc(-1, 1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => empty.HasArc(0, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => empty.HasArc(0, 0));
-			Assert.Throws<ArgumentOutOfRangeException>(() => empty.HasArc(0, 1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => empty.HasArc(1, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => empty.HasArc(1, 0));
-			Assert.Throws<ArgumentOutOfRangeException>(() => empty.HasArc(1, 1));
+			ReferenceEquals(empty3, empty4);
+
+			Graph empty5 = Graph<Nothing, string>.GetEmpty();
+			Graph empty6 = Graph<Nothing, string>.GetEmpty();
+
+			ReferenceEquals(empty5, empty6);
+
+			Graph empty7 = Graph<string, int>.GetEmpty();
+			Graph empty8 = Graph<string, int>.GetEmpty();
+
+			ReferenceEquals(empty7, empty8);
 		}
 
-		[Fact]
-		public void OneVertexZeroArcsGraphTests ()
+		[Theory]
+		[MemberData(nameof(GraphTestData.GetGraphsAndExpectedWithoutWeightsAndData), MemberType = typeof(GraphTestData))]
+		public void VertexCountTests (Graph graph, ExpectedGraph expected)
 		{
-			GraphBuilder builder = new(1);
-
-			Assert.Equal(1, builder.VertexCount);
-			Assert.Equal(0, builder.EdgeCount);
-
-			Graph graph = builder.Build();
-
-			Assert.Equal(1, graph.VertexCount);
-			Assert.Equal(0, graph.ArcCount);
-			Assert.Equal(0f, graph.AverageVertexDegree);
-			//Assert.Equal(0f, graph.Density);
-			Assert.Equal(0, graph.DuplicateArcCount);
-			//Assert.Equal(0, graph.MaxVertexDegree);
-			Assert.Equal(0, graph.ReflexiveVertexCount);
-
-			Assert.Equal(0, graph.GetNeighbors(0).Length);
-			Assert.False(graph.HasArc(0, 0));
-
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.GetNeighbors(-1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.GetNeighbors(1));
-
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 0));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(0, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(0, 1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(1, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(1, 0));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(1, 1));
+			Assert.Equal(expected.VertexCount, graph.VertexCount);
 		}
 
-		[Fact]
-		public void OneVertexOneArcGraphTests ()
+		[Theory]
+		[MemberData(nameof(GraphTestData.GetGraphsAndExpectedWithoutWeightsAndData), MemberType = typeof(GraphTestData))]
+		public void ArcCountTests (Graph graph, ExpectedGraph expected)
 		{
-			GraphBuilder builder = new(1);
-			builder.AddArc(0, 0);
-
-			Assert.Equal(1, builder.VertexCount);
-			Assert.Equal(1, builder.EdgeCount);
-
-			Graph graph = builder.Build();
-
-			Assert.Equal(1, graph.VertexCount);
-			Assert.Equal(1, graph.ArcCount);
-			Assert.Equal(2f, graph.AverageVertexDegree);
-			//Assert.Equal(0f, graph.Density);
-			Assert.Equal(0, graph.DuplicateArcCount);
-			//Assert.Equal(1, graph.MaxVertexDegree);
-			Assert.Equal(1, graph.ReflexiveVertexCount);
-
-			Assert.Equal(1, graph.GetNeighbors(0).Length);
-			Assert.True(graph.HasArc(0, 0));
-
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.GetNeighbors(-1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.GetNeighbors(1));
-
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 0));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(0, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(0, 1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(1, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(1, 0));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(1, 1));
+			Assert.Equal(expected.ArcCount, graph.ArcCount);
 		}
 
-		[Fact]
-		public void OneVertexTwoArcsGraphTests ()
+		[Theory]
+		[MemberData(nameof(GraphTestData.GetGraphsAndExpectedWithoutWeightsAndData), MemberType = typeof(GraphTestData))]
+		public void AverageVertexDegreeTests (Graph graph, ExpectedGraph expected)
 		{
-			GraphBuilder builder = new(1);
-			builder.AddArc(0, 0);
-			builder.AddArc(0, 0);
-
-			Assert.Equal(1, builder.VertexCount);
-			Assert.Equal(2, builder.EdgeCount);
-
-			Graph graph = builder.Build();
-
-			Assert.Equal(1, graph.VertexCount);
-			Assert.Equal(2, graph.ArcCount);
-			Assert.Equal(4f, graph.AverageVertexDegree);
-			//Assert.Equal(0f, graph.Density);
-			Assert.Equal(1, graph.DuplicateArcCount);
-			//Assert.Equal(4, graph.MaxVertexDegree);
-			Assert.Equal(2, graph.ReflexiveVertexCount);
-
-			Assert.Equal(2, graph.GetNeighbors(0).Length);
-			Assert.True(graph.HasArc(0, 0));
-
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.GetNeighbors(-1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.GetNeighbors(1));
-
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 0));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(0, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(0, 1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(1, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(1, 0));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(1, 1));
+			Assert.Equal(expected.AverageVertexDegree, graph.AverageVertexDegree);
 		}
 
-		[Fact]
-		public void TwoVertexesZeroArcsGraphTests ()
+		[Theory]
+		[MemberData(nameof(GraphTestData.GetGraphsAndExpectedWithoutWeightsAndData), MemberType = typeof(GraphTestData))]
+		public void DuplicateArcCountTests (Graph graph, ExpectedGraph expected)
 		{
-			GraphBuilder builder = new(2);
-
-			Assert.Equal(2, builder.VertexCount);
-			Assert.Equal(0, builder.EdgeCount);
-
-			Graph graph = builder.Build();
-
-			Assert.Equal(2, graph.VertexCount);
-			Assert.Equal(0, graph.ArcCount);
-			Assert.Equal(0f, graph.AverageVertexDegree);
-			//Assert.Equal(0f, graph.Density);
-			Assert.Equal(0, graph.DuplicateArcCount);
-			//Assert.Equal(0, graph.MaxVertexDegree);
-			Assert.Equal(0, graph.ReflexiveVertexCount);
-
-			Assert.Equal(0, graph.GetNeighbors(0).Length);
-			Assert.Equal(0, graph.GetNeighbors(1).Length);
-			Assert.False(graph.HasArc(0, 0));
-			Assert.False(graph.HasArc(0, 1));
-			Assert.False(graph.HasArc(1, 0));
-			Assert.False(graph.HasArc(1, 1));
-
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.GetNeighbors(-1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.GetNeighbors(2));
-
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 0));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 2));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(0, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(0, 2));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(1, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(1, 2));
+			Assert.Equal(expected.DuplicateArcCount, graph.DuplicateArcCount);
 		}
 
-		[Fact]
-		public void TwoVertexesOneReflexiveArcGraphTests ()
+		[Theory]
+		[MemberData(nameof(GraphTestData.GetGraphsAndExpectedWithoutWeightsAndData), MemberType = typeof(GraphTestData))]
+		public void ReflexiveVertexCountTests (Graph graph, ExpectedGraph expected)
 		{
-			GraphBuilder builder = new(2);
-			builder.AddArc(1, 1);
-
-			Assert.Equal(2, builder.VertexCount);
-			Assert.Equal(1, builder.EdgeCount);
-
-			Graph graph = builder.Build();
-
-			Assert.Equal(2, graph.VertexCount);
-			Assert.Equal(1, graph.ArcCount);
-			Assert.Equal(1f, graph.AverageVertexDegree);
-			//Assert.Equal(0f, graph.Density);
-			Assert.Equal(0, graph.DuplicateArcCount);
-			//Assert.Equal(1, graph.MaxVertexDegree);
-			Assert.Equal(1, graph.ReflexiveVertexCount);
-
-			Assert.Equal(0, graph.GetNeighbors(0).Length);
-			Assert.Equal(1, graph.GetNeighbors(1).Length);
-
-			Assert.False(graph.HasArc(0, 0));
-			Assert.False(graph.HasArc(0, 1));
-			Assert.False(graph.HasArc(1, 0));
-			Assert.True(graph.HasArc(1, 1));
-
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.GetNeighbors(-1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.GetNeighbors(2));
-
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 0));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 2));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(0, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(0, 2));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(1, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(1, 2));
+			Assert.Equal(expected.ReflexiveArcsCount, graph.ReflexiveArcsCount);
 		}
 
-		[Fact]
-		public void TwoVertexesTwoReflexiveArcsGraphTests ()
+		[Theory]
+		[MemberData(nameof(GraphTestData.GetGraphsAndExpectedWithoutWeightsAndData), MemberType = typeof(GraphTestData))]
+		public void IsAcyclicTests (Graph graph, ExpectedGraph expected)
 		{
-			GraphBuilder builder = new(2);
-			builder.AddArc(0, 0);
-			builder.AddArc(1, 1);
-
-			Assert.Equal(2, builder.VertexCount);
-			Assert.Equal(2, builder.EdgeCount);
-
-			Graph graph = builder.Build();
-
-			Assert.Equal(2, graph.VertexCount);
-			Assert.Equal(2, graph.ArcCount);
-			Assert.Equal(2f, graph.AverageVertexDegree);
-			//Assert.Equal(0f, graph.Density);
-			Assert.Equal(0, graph.DuplicateArcCount);
-			//Assert.Equal(1, graph.MaxVertexDegree);
-			Assert.Equal(2, graph.ReflexiveVertexCount);
-
-			Assert.Equal(1, graph.GetNeighbors(0).Length);
-			Assert.Equal(1, graph.GetNeighbors(1).Length);
-
-			Assert.True(graph.HasArc(0, 0));
-			Assert.False(graph.HasArc(0, 1));
-			Assert.False(graph.HasArc(1, 0));
-			Assert.True(graph.HasArc(1, 1));
-
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.GetNeighbors(-1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.GetNeighbors(2));
-
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 0));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 2));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(0, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(0, 2));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(1, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(1, 2));
+			Assert.Equal(expected.IsAcyclic, graph.IsAcyclic);
 		}
 
-		[Fact]
-		public void TwoVertexesThreeReflexiveArcsGraphTests ()
+		[Theory]
+		[MemberData(nameof(GraphTestData.GetGraphsAndExpectedWithoutWeightsAndData), MemberType = typeof(GraphTestData))]
+		public void GetNeighborsTests (Graph graph, ExpectedGraph expected)
 		{
-			GraphBuilder builder = new(2);
-			builder.AddArc(0, 0);
-			builder.AddArc(1, 1);
-			builder.AddArc(1, 1);
+			Assert.Equal(expected.Neighbors.Length, graph.VertexCount);
 
-			Assert.Equal(2, builder.VertexCount);
-			Assert.Equal(3, builder.EdgeCount);
+			for ( int vertex = 0; vertex < expected.Neighbors.Length; vertex++ )
+			{
+				int[] expectedNeighbors = expected.Neighbors[vertex];
+				ReadOnlySpan<int> graphNeighbors = graph.GetNeighbors(vertex);
 
-			Graph graph = builder.Build();
+				Assert.Equal(expectedNeighbors.Length, graphNeighbors.Length);
 
-			Assert.Equal(2, graph.VertexCount);
-			Assert.Equal(3, graph.ArcCount);
-			Assert.Equal(3f, graph.AverageVertexDegree);
-			//Assert.Equal(0f, graph.Density);
-			Assert.Equal(1, graph.DuplicateArcCount);
-			//Assert.Equal(1, graph.MaxVertexDegree);
-			Assert.Equal(3, graph.ReflexiveVertexCount);
-
-			Assert.Equal(1, graph.GetNeighbors(0).Length);
-			Assert.Equal(2, graph.GetNeighbors(1).Length);
-
-			Assert.True(graph.HasArc(0, 0));
-			Assert.False(graph.HasArc(0, 1));
-			Assert.False(graph.HasArc(1, 0));
-			Assert.True(graph.HasArc(1, 1));
-
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.GetNeighbors(-1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.GetNeighbors(2));
-
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 0));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 2));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(0, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(0, 2));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(1, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(1, 2));
+				for ( int i = 0; i < expectedNeighbors.Length; i++ )
+				{
+					Assert.Equal(expectedNeighbors[i], graphNeighbors[i]);
+				}
+			}
 		}
 
-		[Fact]
-		public void TwoVertexesOneArcGraphTests ()
+		[Theory]
+		[MemberData(nameof(GraphTestData.GetGraphsAndExpectedWithoutWeightsAndData), MemberType = typeof(GraphTestData))]
+		public void GetNeighborThrowsTests (Graph graph, ExpectedGraph expected)
 		{
-			GraphBuilder builder = new(2);
-			builder.AddArc(1, 0);
-
-			Assert.Equal(2, builder.VertexCount);
-			Assert.Equal(1, builder.EdgeCount);
-
-			Graph graph = builder.Build();
-
-			Assert.Equal(2, graph.VertexCount);
-			Assert.Equal(1, graph.ArcCount);
-			Assert.Equal(1f, graph.AverageVertexDegree);
-			//Assert.Equal(0f, graph.Density);
-			Assert.Equal(0, graph.DuplicateArcCount);
-			//Assert.Equal(1, graph.MaxVertexDegree);
-			Assert.Equal(0, graph.ReflexiveVertexCount);
-
-			Assert.Equal(0, graph.GetNeighbors(0).Length);
-			Assert.Equal(1, graph.GetNeighbors(1).Length);
-
-			Assert.False(graph.HasArc(0, 0));
-			Assert.False(graph.HasArc(0, 1));
-			Assert.True(graph.HasArc(1, 0));
-			Assert.False(graph.HasArc(1, 1));
-
 			Assert.Throws<ArgumentOutOfRangeException>(() => graph.GetNeighbors(-1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.GetNeighbors(2));
-
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 0));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 2));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(0, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(0, 2));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(1, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(1, 2));
+			Assert.Throws<ArgumentOutOfRangeException>(() => graph.GetNeighbors(expected.Neighbors.Length));
 		}
 
-		[Fact]
-		public void TwoVertexesTwoArcsGraphTests ()
+		[Theory]
+		[MemberData(nameof(GraphTestData.GetGraphsAndExpectedWithoutWeightsAndData), MemberType = typeof(GraphTestData))]
+		public void HasArcTests (Graph graph, ExpectedGraph expected)
 		{
-			GraphBuilder builder = new(2);
-			builder.AddArc(0, 1);
-			builder.AddArc(1, 0);
+			for ( int vertex = 0; vertex < expected.Neighbors.Length; vertex++ )
+			{
+				int[] expectedNeighbors = expected.Neighbors[vertex];
+				if ( expectedNeighbors.Length > 0 )
+				{
+					ReadOnlySpan<int> graphNeighbors = graph.GetNeighbors(vertex);
 
-			Assert.Equal(2, builder.VertexCount);
-			Assert.Equal(2, builder.EdgeCount);
-
-			Graph graph = builder.Build();
-
-			Assert.Equal(2, graph.VertexCount);
-			Assert.Equal(2, graph.ArcCount);
-			Assert.Equal(2f, graph.AverageVertexDegree);
-			//Assert.Equal(0f, graph.Density);
-			Assert.Equal(0, graph.DuplicateArcCount);
-			//Assert.Equal(1, graph.MaxVertexDegree);
-			Assert.Equal(0, graph.ReflexiveVertexCount);
-
-			Assert.Equal(1, graph.GetNeighbors(0).Length);
-			Assert.Equal(1, graph.GetNeighbors(1).Length);
-
-			Assert.False(graph.HasArc(0, 0));
-			Assert.True(graph.HasArc(0, 1));
-			Assert.True(graph.HasArc(1, 0));
-			Assert.False(graph.HasArc(1, 1));
-
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.GetNeighbors(-1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.GetNeighbors(2));
-
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 0));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 2));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(0, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(0, 2));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(1, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(1, 2));
-		}
-
-		[Fact]
-		public void TwoVertexesThreeArcsGraphTests ()
-		{
-			GraphBuilder builder = new(2);
-			builder.AddArc(0, 1);
-			builder.AddArc(1, 0);
-			builder.AddArc(0, 1);
-
-			Assert.Equal(2, builder.VertexCount);
-			Assert.Equal(3, builder.EdgeCount);
-
-			Graph graph = builder.Build();
-
-			Assert.Equal(2, graph.VertexCount);
-			Assert.Equal(3, graph.ArcCount);
-			Assert.Equal(3f, graph.AverageVertexDegree);
-			//Assert.Equal(0f, graph.Density);
-			Assert.Equal(1, graph.DuplicateArcCount);
-			//Assert.Equal(1, graph.MaxVertexDegree);
-			Assert.Equal(0, graph.ReflexiveVertexCount);
-
-			Assert.Equal(2, graph.GetNeighbors(0).Length);
-			Assert.Equal(1, graph.GetNeighbors(1).Length);
-
-			Assert.False(graph.HasArc(0, 0));
-			Assert.True(graph.HasArc(0, 1));
-			Assert.True(graph.HasArc(1, 0));
-			Assert.False(graph.HasArc(1, 1));
-
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.GetNeighbors(-1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.GetNeighbors(2));
-
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 0));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(-1, 2));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(0, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(0, 2));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(1, -1));
-			Assert.Throws<ArgumentOutOfRangeException>(() => graph.HasArc(1, 2));
+					for ( int i = 0; i < expectedNeighbors.Length; i++ )
+					{
+						int expectedNeighbor = expectedNeighbors[i];
+						Assert.True(graph.HasArc(vertex, expectedNeighbor));
+					}
+				}
+			}
 		}
 	}
 }

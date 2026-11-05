@@ -13,12 +13,12 @@ namespace Graphs.NET.Algorithms
 				throw new ArgumentException("destination span must be greater than or equal to graph vertex count");
 			}
 
-			if ( g.IsAcyclicCalculated && !g.IsAcyclic )
+			if ( g._isAcyclicCalculated && !g.IsAcyclic )
 			{
 				return false;
 			}
 
-			if ( g.IsAcyclicCalculated && g.IsAcyclic )
+			if ( g._isAcyclicCalculated && g.IsAcyclic )
 			{
 				TopologicalSortInCertainlyAcyclicGraph(g, destination);
 				return true;
@@ -26,7 +26,7 @@ namespace Graphs.NET.Algorithms
 
 			bool success = TopologicalSortWithAcyclicityCheck(g, destination);
 			g.IsAcyclic = success;
-			g.IsAcyclicCalculated = true;
+			g._isAcyclicCalculated = true;
 
 			return success;
 		}

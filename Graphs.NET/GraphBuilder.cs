@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Buffers;
+using System.Runtime.CompilerServices;
 namespace Graphs.NET
 {
 	public class GraphBuilder
@@ -9,10 +10,10 @@ namespace Graphs.NET
 		public int EdgeCount { get; protected set; }
 		public int EdgeCapacity { get; protected set; }
 
-		private int _vertexCapacity;
-		private int[] _heads;
-		private int[] _targets;
-		private int[] _nexts;
+		protected int _vertexCapacity;
+		protected int[] _heads;
+		protected int[] _targets;
+		protected int[] _nexts;
 
 		public GraphBuilder (int v = 0, int u = 0)
 		{
@@ -20,7 +21,7 @@ namespace Graphs.NET
 			ArgumentOutOfRangeException.ThrowIfNegative(u);
 
 			EnsureVertexCount(v);
-			EnsureEdgeCapacity(Math.Max(u, MinCapacity));
+			EnsureEdgeCapacity(u);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -45,11 +46,18 @@ namespace Graphs.NET
 			EnsureEdgeCapacity(EdgeCount + 2);
 
 			InsertArc(v1, v2);
-			InsertArc(v2, v1);
+
+			if ( v1 != v2 )
+			{
+				InsertArc(v2, v1);
+			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Graph Build () => Build(GraphBuildingOptions.Default);
+		public Graph Build ()
+		{
+			return Build(GraphBuildingOptions.Default);
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Graph Build (GraphBuildingOptionsFixed options)
@@ -60,63 +68,60 @@ namespace Graphs.NET
 			}
 
 			int[] offsets = new int[VertexCount + 1];
-			int[] _targets = new int[EdgeCount];
-			offsets[VertexCount] = EdgeCount;
-
-			bool addReflexive = !options.alwaysReflexiveArcs && options.enableReflexiveArcs;
-
-			offsets[0] = 0;
-			int pointer = _heads[0];
-			int current = 0;
-			while ( pointer != -1 )
+			int[] targets = new int[EdgeCount];
+			
+			for ( int vertex = 0; vertex < VertexCount; vertex++ )
 			{
-				if ( addReflexive
-					|| (options.alwaysReflexiveArcs
-					&& this._targets[pointer] != 0) )
-				{
-					_targets[current] = this._targets[pointer];
-					current++;
-				}
-				pointer = _nexts[pointer];
-			}
-
-			for ( int i = 1; i < VertexCount; i++ )
-			{
-				offsets[i] = offsets[i - 1] + current;
-				pointer = _heads[i];
-				current = 0;
+				int pointer = _heads[vertex];
+				int currentVertexOffset = 0;
 				while ( pointer != -1 )
 				{
-					if ( addReflexive
-						|| (options.alwaysReflexiveArcs
-						&& this._targets[pointer] != i) )
+					int target = _targets[pointer];
+					bool add = true;
+					if ( target == vertex )
 					{
-						_targets[offsets[i] + current] = this._targets[pointer];
-						current++;
+						if ( !options.enableReflexiveArcs )
+						{
+							add = false;
+						}
+					}
+					if ( !options.enableDuplicateArcs
+					&& offsets.AsSpan(offsets[vertex], currentVertexOffset).Contains(target) )
+					{
+						add = false;
+					}
+
+					if ( add )
+					{
+						targets[offsets[vertex] + currentVertexOffset++] = _targets[pointer];
 					}
 					pointer = _nexts[pointer];
 				}
+				offsets[vertex+1] = offsets[vertex] + currentVertexOffset;
 			}
-			Graph g = new(offsets, _targets, options);
+			Graph g = new(offsets, targets, options);
 			return g;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void EnsureEdgeCapacity (int capacity)
+		protected virtual void EnsureEdgeCapacity (int capacity)
 		{
-			ArgumentOutOfRangeException.ThrowIfNegative(capacity);
-
 			if ( capacity <= EdgeCapacity )
 			{
 				return;
 			}
 			else
 			{
-				EdgeCapacity = MinCapacity;
-				while ( EdgeCapacity < capacity )
-				{
-					EdgeCapacity *= 2;
-				}
+				capacity--;
+				capacity |= capacity >> 1;
+				capacity |= capacity >> 2;
+				capacity |= capacity >> 4;
+				capacity |= capacity >> 8;
+				capacity |= capacity >> 16;
+				capacity++;
+
+				EdgeCapacity = Math.Max(MinCapacity, capacity);
+
 				Array.Resize(ref _targets, EdgeCapacity);
 				Array.Resize(ref _nexts, EdgeCapacity);
 				_nexts.AsSpan(EdgeCount, EdgeCapacity - EdgeCount).Fill(-1);
@@ -124,10 +129,8 @@ namespace Graphs.NET
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void EnsureVertexCount (int count)
+		protected virtual void EnsureVertexCount (int count)
 		{
-			ArgumentOutOfRangeException.ThrowIfNegative(count);
-
 			if ( count <= VertexCount )
 			{
 				return;
@@ -138,11 +141,17 @@ namespace Graphs.NET
 			}
 			else
 			{
-				_vertexCapacity = MinCapacity;
-				while ( _vertexCapacity < count )
-				{
-					_vertexCapacity *= 2;
-				}
+				int capacity = count;
+				capacity--;
+				capacity |= capacity >> 1;
+				capacity |= capacity >> 2;
+				capacity |= capacity >> 4;
+				capacity |= capacity >> 8;
+				capacity |= capacity >> 16;
+				capacity++;
+
+				_vertexCapacity = Math.Max(MinCapacity, capacity);
+
 				Array.Resize(ref _heads, _vertexCapacity);
 				_heads.AsSpan(VertexCount, _vertexCapacity - VertexCount).Fill(-1);
 				VertexCount = count;
@@ -168,10 +177,6 @@ namespace Graphs.NET
 		public bool HasWeight { get; }
 		public bool HasVertexData { get; }
 
-		private int _vertexCapacity;
-		private int[] _heads;
-		private int[] _targets;
-		private int[] _nexts;
 		private TEdgeWeight[]? _weights;
 		private TVertexData[]? _data;
 
@@ -234,82 +239,116 @@ namespace Graphs.NET
 			_data[v] = d;
 		}
 
-		public Graph<TEdgeWeight, TVertexData> BuildWithEdgeWeightsAndVertexData () => BuildWithEdgeWeightsAndVertexData(GraphBuildingOptions.Default);
+		public Graph<TEdgeWeight, TVertexData> BuildWithEdgeWeightsAndVertexData ()
+		{
+			return BuildWithEdgeWeightsAndVertexData(GraphBuildingOptions.Default);
+		}
 
 		public Graph<TEdgeWeight, TVertexData> BuildWithEdgeWeightsAndVertexData (GraphBuildingOptionsFixed options)
 		{
+			if ( VertexCount == 0 )
+			{
+				return Graph<TEdgeWeight, TVertexData>.GetEmpty();
+			}
+
 			int[] offsets = new int[VertexCount + 1];
-			int[] _targets = new int[EdgeCount];
+			int[] targets = new int[EdgeCount];
 			offsets[VertexCount] = EdgeCount;
+
 			TEdgeWeight[]? newWeights = null;
-			if ( HasWeight
-				&& _weights != null )
+			if ( HasWeight )
 			{
 				newWeights = new TEdgeWeight[EdgeCount];
 			}
 
-			bool addReflexive = !options.alwaysReflexiveArcs && options.enableReflexiveArcs;
-
-			offsets[0] = 0;
 			int pointer = _heads[0];
-			int current = 0;
+			int currentVertexOffset = 0;
 			while ( pointer != -1 )
 			{
-				if ( addReflexive
-					|| (options.alwaysReflexiveArcs
-					&& this._targets[pointer] != 0) )
+				int target = _targets[pointer];
+				bool add = true;
+				if ( target == 0 )
 				{
-					_targets[current] = this._targets[pointer];
-					current++;
+					if ( !options.enableReflexiveArcs )
+					{
+						add = false;
+					}
+				}
+				if ( !options.enableDuplicateArcs
+					&& offsets.AsSpan(0, currentVertexOffset).Contains(target) )
+				{
+					add = false;
+				}
+
+				if ( add )
+				{
 					if ( HasWeight )
 					{
-						newWeights![current] = _weights![pointer];
+						newWeights![currentVertexOffset] = _weights![pointer];
 					}
+					targets[currentVertexOffset++] = _targets[pointer];
 				}
 				pointer = _nexts[pointer];
 			}
 
-			for ( int i = 1; i < VertexCount; i++ )
+			offsets[1] = currentVertexOffset;
+
+			for ( int vertex = 1; vertex < VertexCount; vertex++ )
 			{
-				offsets[i] = offsets[i - 1] + current;
-				pointer = _heads[i];
-				current = 0;
+				pointer = _heads[vertex];
+				currentVertexOffset = 0;
 				while ( pointer != -1 )
 				{
-					if ( addReflexive
-						|| (options.alwaysReflexiveArcs
-						&& this._targets[pointer] != i) )
+					int target = _targets[pointer];
+					bool add = true;
+					if ( target == vertex )
 					{
-						_targets[offsets[i] + current] = this._targets[pointer];
-						current++;
+						if ( !options.enableReflexiveArcs )
+						{
+							add = false;
+						}
+					}
+					if ( !options.enableDuplicateArcs
+					&& offsets.AsSpan(offsets[vertex], currentVertexOffset).Contains(target) )
+					{
+						add = false;
+					}
+
+					if ( add )
+					{
 						if ( HasWeight )
 						{
-							newWeights![offsets[i] + current] = _weights![pointer];
+							newWeights![offsets[vertex] + currentVertexOffset] = _weights![pointer];
 						}
+						targets[offsets[vertex] + currentVertexOffset++] = _targets[pointer];
 					}
 					pointer = _nexts[pointer];
 				}
+				offsets[vertex + 1] = offsets[vertex] + currentVertexOffset;
 			}
-			Graph<TEdgeWeight, TVertexData> g = new(offsets, _targets, options, newWeights, _data);
+			Graph<TEdgeWeight, TVertexData> g = new(offsets, targets, options, newWeights, _data);
 			return g;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void EnsureEdgeCapacity (int capacity)
+		protected override void EnsureEdgeCapacity (int capacity)
 		{
-			ArgumentOutOfRangeException.ThrowIfNegative(capacity);
-
 			if ( capacity <= EdgeCapacity )
 			{
 				return;
 			}
 			else
 			{
-				EdgeCapacity = MinCapacity;
-				while ( EdgeCapacity < capacity )
-				{
-					EdgeCapacity *= 2;
-				}
+				capacity--;
+				capacity |= capacity >> 1;
+				capacity |= capacity >> 2;
+				capacity |= capacity >> 4;
+				capacity |= capacity >> 8;
+				capacity |= capacity >> 16;
+				capacity++;
+
+				EdgeCapacity = Math.Max(MinCapacity, capacity);
+
 				Array.Resize(ref _targets, EdgeCapacity);
 				Array.Resize(ref _nexts, EdgeCapacity);
 				_nexts.AsSpan(EdgeCount, EdgeCapacity - EdgeCount).Fill(-1);
@@ -322,10 +361,8 @@ namespace Graphs.NET
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void EnsureVertexCount (int count)
+		protected override void EnsureVertexCount (int count)
 		{
-			ArgumentOutOfRangeException.ThrowIfNegative(count);
-
 			if ( count <= VertexCount )
 			{
 				return;
@@ -336,11 +373,17 @@ namespace Graphs.NET
 			}
 			else
 			{
-				_vertexCapacity = MinCapacity;
-				while ( _vertexCapacity < count )
-				{
-					_vertexCapacity *= 2;
-				}
+				int capacity = count;
+				capacity--;
+				capacity |= capacity >> 1;
+				capacity |= capacity >> 2;
+				capacity |= capacity >> 4;
+				capacity |= capacity >> 8;
+				capacity |= capacity >> 16;
+				capacity++;
+
+				_vertexCapacity = Math.Max(MinCapacity, capacity);
+
 				Array.Resize(ref _heads, _vertexCapacity);
 				_heads.AsSpan(VertexCount, _vertexCapacity - VertexCount).Fill(-1);
 
@@ -351,15 +394,6 @@ namespace Graphs.NET
 				VertexCount = count;
 			}
         }
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void InsertArc (int from, int to)
-        {
-			_targets[EdgeCount] = to;
-			_nexts[EdgeCount] = _heads[from];
-			_heads[from] = EdgeCount;
-			EdgeCount++;
-		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void InsertArc (int from, int to, TEdgeWeight w)

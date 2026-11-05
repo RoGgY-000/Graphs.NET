@@ -2,6 +2,7 @@
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 // -----------------------------------------------------------------------
 
+using BenchmarkDotNet.Reports;
 using BenchmarkDotNet.Running;
 using Benchmarks;
 using Benchmarks.Algorithms;
@@ -11,13 +12,13 @@ namespace GraphBenchmarks
 {
 	internal class Program
 	{
-		static void Main (string[] args)
+		static void Main ()
 		{
-			//var quikGraphCycleDetection = BenchmarkRunner.Run<FastestQuikGraphCycleDetectionBenchmark>();
-			//var quikGraphTopologicalSort = BenchmarkRunner.Run<FastestQuikGraphTopologicalSortBenchmark>();
+			//Summary quikGraphCycleDetection = BenchmarkRunner.Run<FastestQuikGraphCycleDetectionBenchmark>();
+			//Summary quikGraphTopologicalSort = BenchmarkRunner.Run<FastestQuikGraphTopologicalSortBenchmark>();
 
-			var containCycle = BenchmarkRunner.Run<ContainCycleAlgorithmBenchmark>();
-			//var topologicalSort = BenchmarkRunner.Run<TopologicalSortAlgorithmBenchmark>();
+			Summary containCycle = BenchmarkRunner.Run<ContainCycleAlgorithmBenchmark>();
+			//Summary topologicalSort = BenchmarkRunner.Run<TopologicalSortAlgorithmBenchmark>();
 		}
 	}
 }

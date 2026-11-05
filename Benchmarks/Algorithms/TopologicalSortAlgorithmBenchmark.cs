@@ -82,7 +82,7 @@ namespace Benchmarks.Algorithms
 		[Benchmark(Baseline = true)]
 		public bool GraphsNET_TopologicalSort ()
 		{
-			_graph.IsAcyclicCalculated = false;
+			_graph._isAcyclicCalculated = false;
 			return _graph.TryTopologicalSort(_sharedBuffer.AsSpan());
 		}
 	}
