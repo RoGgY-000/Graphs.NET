@@ -4,9 +4,7 @@
 
 using BenchmarkDotNet.Reports;
 using BenchmarkDotNet.Running;
-using Benchmarks;
 using Benchmarks.Algorithms;
-using Benchmarks.QuikGraph;
 
 namespace GraphBenchmarks
 {

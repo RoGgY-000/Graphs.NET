@@ -1,8 +1,8 @@
 ﻿using System.Buffers;
 using System.Runtime.CompilerServices;
-using Graphs.NET.Algorithms;
+using Graphs.NET.Additional;
 
-namespace Graphs.NET
+namespace Graphs.NET.Core
 {
 	public class Graph
 	{

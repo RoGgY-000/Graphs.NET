@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using Benchmarks.Extensions;
-using Graphs.NET;
 using Graphs.NET.Algorithms;
+using Graphs.NET.Core;
 using Microsoft.VSDiagnostics;
 using QuikGraph;
 using QuikGraph.Algorithms;

@@ -1,5 +1,7 @@
 ﻿using System.Buffers;
 using System.Runtime.CompilerServices;
+using Graphs.NET.Additional;
+using Graphs.NET.Core;
 
 namespace Graphs.NET.Algorithms
 {

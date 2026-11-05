@@ -1,4 +1,4 @@
-﻿using Graphs.NET;
+﻿using Graphs.NET.Core;
 
 namespace Tests
 {

@@ -1,4 +1,4 @@
-﻿namespace Graphs.NET
+﻿namespace Graphs.NET.Core
 {
 	public struct Nothing : IComparable<Nothing>
 	{

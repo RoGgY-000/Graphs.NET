@@ -1,6 +1,6 @@
-﻿using System.Buffers;
-using System.Runtime.CompilerServices;
-namespace Graphs.NET
+﻿using System.Runtime.CompilerServices;
+
+namespace Graphs.NET.Core
 {
 	public class GraphBuilder
 	{

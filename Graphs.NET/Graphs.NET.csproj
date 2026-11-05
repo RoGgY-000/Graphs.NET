@@ -7,12 +7,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference
-		  Include="..\Analyzers\Analyzers.csproj"
-		  ReferenceOutputAssembly="false"
-		  Pack="true"
-		  PackagePath="analyzers/dotnet/cs"
-		  Visible="false" />
+		<ProjectReference Include="..\Analyzers\Analyzers.csproj" ReferenceOutputAssembly="false" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 	</ItemGroup>
 
 	<ItemGroup>

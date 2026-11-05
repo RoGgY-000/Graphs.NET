@@ -1,4 +1,4 @@
-﻿namespace Graphs.NET
+﻿namespace Graphs.NET.Core
 {
 	public class GraphBuildingOptions
 	{
