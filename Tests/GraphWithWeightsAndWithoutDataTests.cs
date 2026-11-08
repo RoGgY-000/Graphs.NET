@@ -37,7 +37,7 @@ namespace GraphTests
 		[MemberData(nameof(GraphTestData.GetGraphsAndExpectedWithoutWeightsAndData), MemberType = typeof(GraphTestData))]
 		public void ReflexiveVertexCountTests (Graph graph, ExpectedGraph expected)
 		{
-			Assert.Equal(expected.ReflexiveArcsCount, graph.ReflexiveArcsCount);
+			Assert.Equal(expected.ReflexiveArcsCount, graph.ReflexiveArcCount);
 		}
 
 		[Theory]

@@ -1,21 +1,18 @@
 ﻿using System.Buffers;
 using System.Runtime.CompilerServices;
-using Graphs.NET.Additional;
+using Graphs.NET.Algorithms;
 
 namespace Graphs.NET.Core
 {
 	public class Graph
 	{
-		public static readonly Graph Empty = new([0], [], GraphBuildingOptions.Default);
-
 		internal bool _isAcyclicCalculated = false;
 
 		protected readonly int[] _offsets;
 		protected readonly int[] _targets;
-
-		protected readonly ArrayPool<int> _intPool = ArrayPool<int>.Shared;
-
 		protected readonly GraphBuildingOptionsFixed _options;
+
+		public static Graph Empty { get; } = new([0], [], GraphBuildingOptions.Default);
 
 		public int VertexCount { get; }
 		public int ArcCount { get; }
@@ -26,70 +23,17 @@ namespace Graphs.NET.Core
 		public float AverageVertexDegree
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get
-			{
-				if ( field > -1f )
-				{
-					return field;
-				}
-				else if ( VertexCount == 0 )
-				{
-					field = 0f;
-					return field;
-				}
-				field = 2f * ArcCount / VertexCount;
-				return field;
-			}
+			get => field > -1 ? field : field = CalculateAverageVertexDegree();
 		} = -1f;
 		public int DuplicateArcCount
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get
-			{
-				if ( field > -1 )
-				{
-					return field;
-				}
-				int res = 0;
-				for ( int vertex = 0; vertex < VertexCount; vertex++ )
-				{
-					int currentNeighbor = -1;
-					ReadOnlySpan<int> neighbors = GetNeighbors(vertex);
-					foreach ( int neighbor in neighbors )
-					{
-						if ( currentNeighbor != neighbor )
-						{
-							currentNeighbor = neighbor;
-						}
-						else
-						{
-							res++;
-						}
-					}
-				}
-				field = res;
-				return field;
-			}
+			get => field > -1 ? field : field = CalculateDuplicateArcCount();
 		} = -1;
-		public int ReflexiveArcsCount
+		public int ReflexiveArcCount
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get
-			{
-				if ( field > -1 )
-				{
-					return field;
-				}
-				int res = 0;
-				for ( int vertex = 0; vertex < VertexCount; vertex++ )
-				{
-					ReadOnlySpan<int> neighbors = GetNeighbors(vertex);
-					int reflexiveCount = neighbors.Count(vertex);
-					res += reflexiveCount;
-				}
-				field = res;
-				return field;
-			}
+			get => field > -1 ? field : field = CalculateReflexiveArcCount();
 		} = -1;
 
 		public bool IsAcyclic
@@ -101,7 +45,7 @@ namespace Graphs.NET.Core
 				{
 					return field;
 				}
-				field = CalculateIsAcyclic();
+				field = GraphAlgorithmsExtensions.CalculateIsAcyclic(this);
 				_isAcyclicCalculated = true;
 				return field;
 			}
@@ -111,9 +55,6 @@ namespace Graphs.NET.Core
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal Graph (int[] offsets, int[] targets, GraphBuildingOptionsFixed options, bool sortNeighbors = true)
 		{
-			ArgumentNullException.ThrowIfNull(offsets);
-			ArgumentNullException.ThrowIfNull(targets);
-
 			_offsets = offsets;
 			_targets = targets;
 
@@ -152,440 +93,124 @@ namespace Graphs.NET.Core
 			return _targets.AsSpan(_offsets[from], _offsets[from + 1] - _offsets[from]).BinarySearch(to) >= 0;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal bool BFSIsReachable (int start, int end)
+		private float CalculateAverageVertexDegree ()
 		{
-			ArgumentOutOfRangeException.ThrowIfNegative(start);
-			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(start, VertexCount);
-			ArgumentOutOfRangeException.ThrowIfNegative(end);
-			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(end, VertexCount);
-
-			if ( start == end
-				&& GetNeighbors(start).BinarySearch(end) >= 0 )
-			{
-				return true;
-			}
-
-			int qStart = 0, qEnd = 0;
-			int[] queue = _intPool.Rent(VertexCount);
-
-			int TwoBitArrayLength = TwoBitArray.GetRequiredLengthFor(VertexCount);
-			int[] visitedArray = _intPool.Rent(TwoBitArrayLength);
-			visitedArray.AsSpan(0, TwoBitArrayLength).Clear();
-			TwoBitArray visited = new(visitedArray.AsSpan());
-
-			try
-			{
-				Enqueue(start);
-				visited[start] = 1;
-				while ( qEnd - qStart > 0 )
-				{
-					int curr = Dequeue();
-					ReadOnlySpan<int> neighbors = GetNeighbors(curr);
-					if ( neighbors.BinarySearch(end) >= 0 )
-					{
-						return true;
-					}
-					for ( int i = 0; i < neighbors.Length; i++ )
-					{
-						int neighbor = neighbors[i];
-
-						if ( visited[neighbor] == 0 )
-						{
-							Enqueue(neighbor);
-							visited[neighbor] = 1;
-						}
-					}
-				}
-			}
-			finally
-			{
-				_intPool.Return(visitedArray);
-				_intPool.Return(queue);
-			}
-			return false;
-
-			void Enqueue (int el)
-			{
-				queue[qEnd++] = el;
-			}
-			int Dequeue ()
-			{
-				return queue[qStart++];
-			}
+			return VertexCount == 0 ? 0f : 2f * ArcCount / VertexCount;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal Graph BFSGetReachableFrom (int vertex)
+		private int CalculateDuplicateArcCount ()
 		{
-			ArgumentOutOfRangeException.ThrowIfNegative(vertex);
-			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(vertex, VertexCount);
-
-			int qStart = 0, qEnd = 0, newVertexCounter = 0;
-			int[] queue = _intPool.Rent(VertexCount);
-			int[] visited = _intPool.Rent(VertexCount);
-			int[] newVertexes = _intPool.Rent(VertexCount);
-			queue.AsSpan(0, VertexCount).Clear();
-			visited.AsSpan(0, VertexCount).Clear();
-			newVertexes.AsSpan(0, VertexCount).Clear();
-
-			try
+			int res = 0;
+			for ( int vertex = 0; vertex < VertexCount; vertex++ )
 			{
-				GraphBuilder<Nothing, Nothing> builder = new(1, ArcCount);
-				Enqueue(vertex);
-				while ( qEnd > qStart )
+				int currentNeighbor = -1;
+				ReadOnlySpan<int> neighbors = GetNeighbors(vertex);
+				foreach ( int neighbor in neighbors )
 				{
-					int curr = Dequeue();
-					visited[curr] = 1;
-					ReadOnlySpan<int> neighbors = GetNeighbors(curr);
-					for ( int i = 0; i < neighbors.Length; i++ )
+					if ( currentNeighbor != neighbor )
 					{
-						if ( visited[neighbors[i]] == 0 )
-						{
-							newVertexes[neighbors[i]] = ++newVertexCounter;
-							Enqueue(neighbors[i]);
-							visited[neighbors[i]] = 1;
-						}
-
-						builder.AddArc(newVertexes[curr], newVertexes[neighbors[i]]);
+						currentNeighbor = neighbor;
+					}
+					else
+					{
+						res++;
 					}
 				}
-				return builder.Build(_options);
 			}
-			finally
-			{
-				_intPool.Return(queue);
-				_intPool.Return(visited);
-				_intPool.Return(newVertexes);
-			}
-
-			void Enqueue (int el)
-			{
-				queue[qEnd++] = el;
-			}
-			int Dequeue ()
-			{
-				return queue[qStart++];
-			}
+			return res;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal void BFSAll (Action<int> action)
+		private int CalculateReflexiveArcCount ()
 		{
-			int visitedCount = 0, qStart = 0, qEnd = 0;
-			int[] queue = _intPool.Rent(VertexCount);
-			int visitedTwoBitArrayLength = TwoBitArray.GetRequiredLengthFor(VertexCount);
-			int[] visitedArray = _intPool.Rent(visitedTwoBitArrayLength);
-			visitedArray.AsSpan(0, visitedTwoBitArrayLength).Clear();
-			TwoBitArray visited = new(visitedArray.AsSpan());
-			try
+			int res = 0;
+			for ( int vertex = 0; vertex < VertexCount; vertex++ )
 			{
-				for ( int i = 0; i < VertexCount; i++ )
+				ReadOnlySpan<int> neighbors = GetNeighbors(vertex);
+				int firstOccuredIndex = neighbors.BinarySearch(vertex);
+				if ( firstOccuredIndex >= 0 )
 				{
-					if ( visited[i] == 0 )
+					ReadOnlySpan<int> startsWithReflexive = neighbors.Slice(firstOccuredIndex);
+					int reflexiveCount = 0;
+					while ( reflexiveCount < startsWithReflexive.Length
+						&& startsWithReflexive[reflexiveCount] == vertex )
 					{
-						queue[qEnd++] = i;
-						while ( qEnd > qStart )
-						{
-							int curr = queue[qStart++];
-							if ( visited[curr] < 2 )
-							{
-								action(curr);
-								visited[curr] = 2;
-								visitedCount++;
-								ReadOnlySpan<int> neighbors = GetNeighbors(curr);
-								for ( int j = 0; j < neighbors.Length; j++ )
-								{
-									if ( visited[neighbors[j]] == 0 )
-									{
-										visited[neighbors[j]] = 1;
-										queue[qEnd++] = neighbors[j];
-									}
-								}
-							}
-						}
+						reflexiveCount++;
 					}
+					res += reflexiveCount;
 				}
 			}
-			finally
-			{
-				_intPool.Return(queue);
-				_intPool.Return(visitedArray);
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal bool DFSIsReachable (int start, int end)
-		{
-			ArgumentOutOfRangeException.ThrowIfNegative(start);
-			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(start, VertexCount);
-			ArgumentOutOfRangeException.ThrowIfNegative(end);
-			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(end, VertexCount);
-
-			if ( start == end
-				&& GetNeighbors(start).BinarySearch(end) >= 0 )
-			{
-				return true;
-			}
-
-			int stackEnd = 0;
-			int[] stack = _intPool.Rent(VertexCount);
-
-			int TwoBitArrayLength = TwoBitArray.GetRequiredLengthFor(VertexCount);
-			int[] visitedArray = _intPool.Rent(TwoBitArrayLength);
-			visitedArray.AsSpan(0, TwoBitArrayLength).Clear();
-			TwoBitArray visited = new(visitedArray.AsSpan());
-
-			try
-			{
-				Push(start);
-				visited[start] = 1;
-				while ( stackEnd > 0 )
-				{
-					int curr = Pop();
-					visited[curr] = 1;
-					ReadOnlySpan<int> neighbors = GetNeighbors(curr);
-					if ( neighbors.BinarySearch(end) >= 0 )
-					{
-						return true;
-					}
-					for ( int i = 0; i < neighbors.Length; i++ )
-					{
-						int neighbor = neighbors[i];
-
-						if ( visited[neighbor] == 0 )
-						{
-							Push(neighbor);
-							visited[neighbor] = 1;
-						}
-					}
-				}
-				return false;
-			}
-			finally
-			{
-				_intPool.Return(visitedArray);
-				_intPool.Return(stack);
-			}
-
-			void Push (int el)
-			{
-				stack[stackEnd++] = el;
-			}
-			int Pop ()
-			{
-				return stack[--stackEnd];
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal bool CalculateIsAcyclic ()
-		{
-			if ( VertexCount == 0 )
-			{
-				return true;
-			}
-
-			int stackEnd = 0;
-			int[] vStack = ArrayPool<int>.Shared.Rent(VertexCount);
-			int[] nStack = ArrayPool<int>.Shared.Rent(VertexCount);
-
-			int TwoBitArrayLength = TwoBitArray.GetRequiredLengthFor(VertexCount);
-			int[] visitedArray = ArrayPool<int>.Shared.Rent(TwoBitArrayLength);
-			visitedArray.AsSpan(0, TwoBitArrayLength).Clear();
-			TwoBitArray visited = new(visitedArray.AsSpan());
-
-			try
-			{
-				for ( int i = 0; i < VertexCount; i++ )
-				{
-					if ( visited[i] == 0 )
-					{
-						vStack[stackEnd] = i;
-						nStack[stackEnd] = 0;
-						visited[i] = 1;
-						stackEnd++;
-
-						while ( stackEnd > 0 )
-						{
-							int curr = vStack[stackEnd - 1];
-							ReadOnlySpan<int> neighbors = GetNeighbors(curr);
-							int nextNeighborIndex = nStack[stackEnd - 1];
-							if ( nextNeighborIndex >= neighbors.Length )
-							{
-								stackEnd--;
-								visited[curr] = 2;
-							}
-							else
-							{
-								int neighbor = neighbors[nextNeighborIndex];
-								nStack[stackEnd - 1]++;
-								if ( visited[neighbor] == 1 )
-								{
-									return false;
-								}
-								else if ( visited[neighbor] == 0 )
-								{
-									visited[neighbor] = 1;
-									vStack[stackEnd] = neighbor;
-									nStack[stackEnd] = 0;
-									stackEnd++;
-								}
-							}
-						}
-					}
-				}
-				return true;
-			}
-			finally
-			{
-				ArrayPool<int>.Shared.Return(visitedArray);
-				ArrayPool<int>.Shared.Return(vStack);
-				ArrayPool<int>.Shared.Return(nStack);
-			}
+			return res;
 		}
 	}
 
-	public class Graph<TEdgeWeight, TVertexData>
+	public class Graph<TEdgeWeight>
 		: Graph
 		where TEdgeWeight : IComparable<TEdgeWeight>
-		where TVertexData : IComparable<TVertexData>
 	{
-		private static class EmptyGraph<TWeight, TData>
-			where TWeight : IComparable<TWeight>
-			where TData : IComparable<TData>
-		{
-			internal static Graph<TWeight, TData> Value
-			{
-				get
-				{
-					TWeight[]? w = null;
-					TData[]? d = null;
-					if ( typeof(TWeight) != typeof(Nothing) )
-					{
-						w = [];
-					}
-					if ( typeof(TData) != typeof(Nothing) )
-					{
-						d = [];
-					}
-					return new([0], [], GraphBuildingOptions.Default, w, d);
-				}
-			}
-		}
-
-		public static Graph<TEdgeWeight, TVertexData> GetEmpty () 
-		{
-			return EmptyGraph<TEdgeWeight, TVertexData>.Value;
-		}
-
-		private readonly TEdgeWeight[]? _weights;
-		private readonly TVertexData[]? _data;
-
-		public bool HasWeight { get; }
-		public bool HasVertexData { get; }
-
-		public int MaxVertexDegree
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get
-			{
-				if ( field != -1f )
-				{
-					return field;
-				}
-				int max = 0;
-				for ( int vertex = 0; vertex < VertexCount; vertex++ )
-				{
-					ReadOnlySpan<int> neighbors = GetNeighbors(vertex);
-					int reflexiveCount = neighbors.Count(vertex);
-					max = Math.Max(max, neighbors.Length + reflexiveCount);
-				}
-				field = max;
-				return field;
-			}
-		} = -1;
-		public float Density
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get
-			{
-				if ( field != -1f )
-				{
-					return field;
-				}
-				else if (VertexCount < 2)
-				{
-					field = 0f;
-					return field;
-				}
-				field = (float) (ArcCount - ReflexiveArcsCount - DuplicateArcCount) / (VertexCount * (VertexCount - 1));
-				return field;
-			}
-		} = -1f;
+		protected readonly TEdgeWeight[] _weights;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal Graph (int[] offsets, int[] targets, GraphBuildingOptionsFixed options,
-			TEdgeWeight[]? weights = null, TVertexData[]? data = null) 
+			TEdgeWeight[] weights)
 			: base(offsets, targets, options, false)
 		{
-			if ( typeof(TEdgeWeight) != typeof(Nothing) )
-			{
-				ArgumentNullException.ThrowIfNull(weights);
-				ArgumentOutOfRangeException.ThrowIfNotEqual(targets.Length, weights.Length);
-				HasWeight = true;
-				_weights = weights;
-			}
-
-			if ( typeof(TVertexData) != typeof(Nothing) )
-			{
-				ArgumentNullException.ThrowIfNull(data);
-				ArgumentOutOfRangeException.ThrowIfNotEqual(offsets.Length, data.Length + 1);
-				HasVertexData = true;
-				_data = data;
-			}
+			_weights = weights;
 
 			for ( int vertex = 0; vertex < VertexCount; vertex++ )
 			{
 				Span<int> neighbors = targets.AsSpan(offsets[vertex], offsets[vertex + 1] - offsets[vertex]);
-				if ( HasWeight )
-				{
-					Span<TEdgeWeight> vertexWeights = weights.AsSpan(offsets[vertex], offsets[vertex + 1] - offsets[vertex]);
-					neighbors.Sort(vertexWeights);
-				}
-				else
-				{
-					neighbors.Sort();
-				}
+				Span<TEdgeWeight> vertexWeights = weights.AsSpan(offsets[vertex], offsets[vertex + 1] - offsets[vertex]);
+				neighbors.Sort(vertexWeights);
 			}
 		}
+
+		private static class EmptyGraph<TWeight>
+			where TWeight : IComparable<TWeight>
+		{
+			internal static Graph<TWeight> Value = new([0], [], GraphBuildingOptions.Default, []);
+		}
+
+		public static new Graph<TEdgeWeight> Empty => EmptyGraph<TEdgeWeight>.Value;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ReadOnlySpan<TEdgeWeight> GetWeights (int vertex)
 		{
-			if ( !HasWeight )
-			{
-				throw new InvalidOperationException("Graph does not has weights");
-			}
-
 			ArgumentOutOfRangeException.ThrowIfNegative(vertex);
 			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(vertex, VertexCount);
 
 			return _weights.AsSpan(_offsets[vertex], _offsets[vertex + 1] - _offsets[vertex]);
 		}
+	}
+
+	public class Graph<TEdgeWeight, TVertexData>
+		: Graph<TEdgeWeight>
+		where TEdgeWeight : IComparable<TEdgeWeight>
+	{
+		private readonly TVertexData[] _data;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal Graph (int[] offsets, int[] targets, GraphBuildingOptionsFixed options,
+			TEdgeWeight[] weights, TVertexData[] data) 
+			: base(offsets, targets, options, weights)
+		{
+			_data = data;
+		}
+
+		private static class EmptyGraph<TWeight, TData>
+			where TWeight : IComparable<TWeight>
+		{
+			internal static Graph<TWeight, TData> Value = new([0], [], GraphBuildingOptions.Default, [], []);
+		}
+
+		public static new Graph<TEdgeWeight, TVertexData> Empty => EmptyGraph<TEdgeWeight, TVertexData>.Value;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public TVertexData GetVertexData (int vertex)
 		{
-			if ( !HasVertexData )
-			{
-				throw new InvalidOperationException("Graph does not has vertex data");
-			}
-
 			ArgumentOutOfRangeException.ThrowIfNegative(vertex);
 			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(vertex, VertexCount);
 
-			return _data![vertex];
+			return _data[vertex];
 		}
 	}
 }

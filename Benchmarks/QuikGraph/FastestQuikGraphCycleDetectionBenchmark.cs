@@ -25,7 +25,7 @@ namespace Benchmarks.QuikGraph
 		[GlobalSetup]
 		public void Setup ()
 		{
-			Random random = new Random(42);
+			Random random = new(42);
 
 			adjacencyGraph = new();
 

@@ -9,7 +9,7 @@ namespace Tests
 		{
 			// 1) empty graph
 			{
-				Graph empty = Graph.Empty;
+				Graph empty = Graph._empty;
 
 				yield return new object[] {
 					empty,

@@ -11,22 +11,22 @@ namespace GraphTests
 			Graph empty1 = Graph<Nothing, Nothing>.GetEmpty();
 			Graph empty2 = Graph<Nothing, Nothing>.GetEmpty();
 
-			ReferenceEquals(empty1, empty2);
+			Assert.True(ReferenceEquals(empty1, empty2));
 
 			Graph empty3 = Graph<int, Nothing>.GetEmpty();
 			Graph empty4 = Graph<int, Nothing>.GetEmpty();
 
-			ReferenceEquals(empty3, empty4);
+			Assert.True(ReferenceEquals(empty3, empty4));
 
 			Graph empty5 = Graph<Nothing, string>.GetEmpty();
 			Graph empty6 = Graph<Nothing, string>.GetEmpty();
 
-			ReferenceEquals(empty5, empty6);
+			Assert.True(ReferenceEquals(empty5, empty6));
 
 			Graph empty7 = Graph<string, int>.GetEmpty();
 			Graph empty8 = Graph<string, int>.GetEmpty();
 
-			ReferenceEquals(empty7, empty8);
+			Assert.True(ReferenceEquals(empty7, empty8));
 		}
 
 		[Theory]
@@ -61,7 +61,7 @@ namespace GraphTests
 		[MemberData(nameof(GraphTestData.GetGraphsAndExpectedWithoutWeightsAndData), MemberType = typeof(GraphTestData))]
 		public void ReflexiveVertexCountTests (Graph graph, ExpectedGraph expected)
 		{
-			Assert.Equal(expected.ReflexiveArcsCount, graph.ReflexiveArcsCount);
+			Assert.Equal(expected.ReflexiveArcsCount, graph.ReflexiveArcCount);
 		}
 
 		[Theory]

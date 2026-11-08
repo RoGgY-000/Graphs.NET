@@ -156,5 +156,72 @@ namespace Graphs.NET.Algorithms
 				ArrayPool<int>.Shared.Return(nStack);
 			}
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static bool CalculateIsAcyclic (this Graph g)
+		{
+			if ( g.VertexCount == 0 )
+			{
+				return true;
+			}
+
+			int stackEnd = 0;
+			int[] vertexStack = ArrayPool<int>.Shared.Rent(g.VertexCount);
+			int[] neighborStack = ArrayPool<int>.Shared.Rent(g.VertexCount);
+
+			int TwoBitArrayLength = TwoBitArray.GetRequiredLengthFor(g.VertexCount);
+			int[] visitedArray = ArrayPool<int>.Shared.Rent(TwoBitArrayLength);
+			visitedArray.AsSpan(0, TwoBitArrayLength).Clear();
+			TwoBitArray visited = new(visitedArray.AsSpan());
+
+			try
+			{
+				for ( int vertex = 0; vertex < g.VertexCount; vertex++ )
+				{
+					if ( visited[vertex] == 0 )
+					{
+						vertexStack[stackEnd] = vertex;
+						neighborStack[stackEnd] = 0;
+						visited[vertex] = 1;
+						stackEnd++;
+
+						while ( stackEnd > 0 )
+						{
+							int currentVertex = vertexStack[stackEnd - 1];
+							ReadOnlySpan<int> neighbors = g.GetNeighbors(currentVertex);
+							int nextNeighborIndex = neighborStack[stackEnd - 1];
+							if ( nextNeighborIndex >= neighbors.Length )
+							{
+								stackEnd--;
+								visited[currentVertex] = 2;
+							}
+							else
+							{
+								int neighbor = neighbors[nextNeighborIndex];
+								neighborStack[stackEnd - 1]++;
+								if ( visited[neighbor] == 1 )
+								{
+									return false;
+								}
+								else if ( visited[neighbor] == 0 )
+								{
+									visited[neighbor] = 1;
+									vertexStack[stackEnd] = neighbor;
+									neighborStack[stackEnd] = 0;
+									stackEnd++;
+								}
+							}
+						}
+					}
+				}
+				return true;
+			}
+			finally
+			{
+				ArrayPool<int>.Shared.Return(visitedArray);
+				ArrayPool<int>.Shared.Return(vertexStack);
+				ArrayPool<int>.Shared.Return(neighborStack);
+			}
+		}
 	}
 }
