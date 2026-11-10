@@ -1,5 +1,6 @@
 ﻿using System.Buffers;
 using System.Runtime.CompilerServices;
+using Graphs.NET.Additional;
 using Graphs.NET.Algorithms;
 
 namespace Graphs.NET.Core
@@ -8,11 +9,13 @@ namespace Graphs.NET.Core
 	{
 		internal bool _isAcyclicCalculated = false;
 
+		private protected readonly OneBitArray _removedVertices;
 		protected readonly int[] _offsets;
 		protected readonly int[] _targets;
+		protected readonly int _maxVertexIndexPlusOne;
 		protected readonly GraphBuildingOptionsFixed _options;
 
-		public static Graph Empty { get; } = new([0], [], GraphBuildingOptions.Default);
+		public static Graph Empty { get; } = new(0, 0, [0], [], OneBitArray.Empty, GraphBuildingOptions.Default);
 
 		public int VertexCount { get; }
 		public int ArcCount { get; }
@@ -53,23 +56,34 @@ namespace Graphs.NET.Core
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal Graph (int[] offsets, int[] targets, GraphBuildingOptionsFixed options, bool sortNeighbors = true)
+		internal Graph (int vertexCount, int arcCount, int[] offsets, int[] targets, OneBitArray _removed, GraphBuildingOptionsFixed options, bool sortNeighbors = true)
 		{
+			VertexCount = vertexCount;
+			ArcCount = arcCount;
+
 			_offsets = offsets;
 			_targets = targets;
 
-			VertexCount = offsets.Length - 1;
-			ArcCount = targets.Length;
+			_removedVertices = _removed;
 
 			_options = options;
 
-			if ( sortNeighbors )
+			_maxVertexIndexPlusOne = _offsets.Length - 1;
+
+			if ( arcCount > 0
+				&& sortNeighbors )
 			{
-				for ( int vertex = 0; vertex < VertexCount; vertex++ )
+				int reallyMaxIndex = 0;
+				for ( int vertex = 0; vertex < _maxVertexIndexPlusOne; vertex++ )
 				{
-					Span<int> neighbors = targets.AsSpan(offsets[vertex], offsets[vertex + 1] - offsets[vertex]);
-					neighbors.Sort();
+					if ( _removedVertices[vertex] == 0 )
+					{
+						reallyMaxIndex = vertex;
+						Span<int> neighbors = targets.AsSpan(offsets[vertex], offsets[vertex + 1] - offsets[vertex]);
+						neighbors.Sort();
+					}
 				}
+				_maxVertexIndexPlusOne = reallyMaxIndex + 1;
 			}
 		}
 
@@ -77,20 +91,24 @@ namespace Graphs.NET.Core
 		public ReadOnlySpan<int> GetNeighbors (int vertex)
 		{
 			ArgumentOutOfRangeException.ThrowIfNegative(vertex);
-			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(vertex, VertexCount);
+			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(vertex, _maxVertexIndexPlusOne);
 
-			return _targets.AsSpan(_offsets[vertex], _offsets[vertex + 1] - _offsets[vertex]);
+			return _removedVertices[vertex] == 1
+				? throw new ArgumentException()
+				: (ReadOnlySpan<int>) _targets.AsSpan(_offsets[vertex], _offsets[vertex + 1] - _offsets[vertex]);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool HasArc (int from, int to)
 		{
 			ArgumentOutOfRangeException.ThrowIfNegative(from);
-			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(from, VertexCount);
+			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(from, _maxVertexIndexPlusOne);
 			ArgumentOutOfRangeException.ThrowIfNegative(to);
-			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(to, VertexCount);
+			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(to, _maxVertexIndexPlusOne);
 
-			return _targets.AsSpan(_offsets[from], _offsets[from + 1] - _offsets[from]).BinarySearch(to) >= 0;
+			return _removedVertices[from] == 1 || _removedVertices[to] == 1
+				? throw new ArgumentException()
+				:_targets.AsSpan(_offsets[from], _offsets[from + 1] - _offsets[from]).BinarySearch(to) >= 0;
 		}
 
 		private float CalculateAverageVertexDegree ()
@@ -101,19 +119,22 @@ namespace Graphs.NET.Core
 		private int CalculateDuplicateArcCount ()
 		{
 			int res = 0;
-			for ( int vertex = 0; vertex < VertexCount; vertex++ )
+			for ( int vertex = 0; vertex < _maxVertexIndexPlusOne; vertex++ )
 			{
-				int currentNeighbor = -1;
-				ReadOnlySpan<int> neighbors = GetNeighbors(vertex);
-				foreach ( int neighbor in neighbors )
+				if ( _removedVertices[vertex] == 0 )
 				{
-					if ( currentNeighbor != neighbor )
+					int currentNeighbor = -1;
+					ReadOnlySpan<int> neighbors = GetNeighbors(vertex);
+					foreach ( int neighbor in neighbors )
 					{
-						currentNeighbor = neighbor;
-					}
-					else
-					{
-						res++;
+						if ( currentNeighbor != neighbor )
+						{
+							currentNeighbor = neighbor;
+						}
+						else
+						{
+							res++;
+						}
 					}
 				}
 			}
@@ -123,20 +144,29 @@ namespace Graphs.NET.Core
 		private int CalculateReflexiveArcCount ()
 		{
 			int res = 0;
-			for ( int vertex = 0; vertex < VertexCount; vertex++ )
+			for ( int vertex = 0; vertex < _maxVertexIndexPlusOne; vertex++ )
 			{
-				ReadOnlySpan<int> neighbors = GetNeighbors(vertex);
-				int firstOccuredIndex = neighbors.BinarySearch(vertex);
-				if ( firstOccuredIndex >= 0 )
+				if ( _removedVertices[vertex] == 0 )
 				{
-					ReadOnlySpan<int> startsWithReflexive = neighbors.Slice(firstOccuredIndex);
-					int reflexiveCount = 0;
-					while ( reflexiveCount < startsWithReflexive.Length
-						&& startsWithReflexive[reflexiveCount] == vertex )
+					ReadOnlySpan<int> neighbors = GetNeighbors(vertex);
+					int firstOccuredIndex = neighbors.BinarySearch(vertex);
+					
+					if ( firstOccuredIndex >= 0 )
 					{
-						reflexiveCount++;
+						while ( firstOccuredIndex > 0
+							&& neighbors[firstOccuredIndex - 1] == vertex )
+						{
+							firstOccuredIndex--;
+						}
+						ReadOnlySpan<int> startsWithReflexive = neighbors.Slice(firstOccuredIndex);
+						int reflexiveCount = 0;
+						while ( reflexiveCount < startsWithReflexive.Length
+							&& startsWithReflexive[reflexiveCount] == vertex )
+						{
+							reflexiveCount++;
+						}
+						res += reflexiveCount;
 					}
-					res += reflexiveCount;
 				}
 			}
 			return res;
@@ -150,9 +180,9 @@ namespace Graphs.NET.Core
 		protected readonly TEdgeWeight[] _weights;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal Graph (int[] offsets, int[] targets, GraphBuildingOptionsFixed options,
+		internal Graph (int vertexCount, int arcCount, int[] offsets, int[] targets, OneBitArray _removed, GraphBuildingOptionsFixed options,
 			TEdgeWeight[] weights)
-			: base(offsets, targets, options, false)
+			: base(vertexCount, arcCount, offsets, targets, _removed, options, false)
 		{
 			_weights = weights;
 
@@ -167,7 +197,7 @@ namespace Graphs.NET.Core
 		private static class EmptyGraph<TWeight>
 			where TWeight : IComparable<TWeight>
 		{
-			internal static Graph<TWeight> Value = new([0], [], GraphBuildingOptions.Default, []);
+			internal static Graph<TWeight> Value = new(0, 0, [0], [], OneBitArray.Empty, GraphBuildingOptions.Default, []);
 		}
 
 		public static new Graph<TEdgeWeight> Empty => EmptyGraph<TEdgeWeight>.Value;
@@ -189,9 +219,9 @@ namespace Graphs.NET.Core
 		private readonly TVertexData[] _data;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal Graph (int[] offsets, int[] targets, GraphBuildingOptionsFixed options,
+		internal Graph (int vertexCount, int arcCount, int[] offsets, int[] targets, OneBitArray _removed, GraphBuildingOptionsFixed options,
 			TEdgeWeight[] weights, TVertexData[] data) 
-			: base(offsets, targets, options, weights)
+			: base(vertexCount, arcCount, offsets, targets, _removed, options, weights)
 		{
 			_data = data;
 		}
@@ -199,7 +229,7 @@ namespace Graphs.NET.Core
 		private static class EmptyGraph<TWeight, TData>
 			where TWeight : IComparable<TWeight>
 		{
-			internal static Graph<TWeight, TData> Value = new([0], [], GraphBuildingOptions.Default, [], []);
+			internal static Graph<TWeight, TData> Value = new(0, 0, [0], [], OneBitArray.Empty, GraphBuildingOptions.Default, [], []);
 		}
 
 		public static new Graph<TEdgeWeight, TVertexData> Empty => EmptyGraph<TEdgeWeight, TVertexData>.Value;

@@ -1,6 +1,6 @@
 ﻿using Graphs.NET.Core;
 
-namespace Tests
+namespace Tests.Data
 {
 	public class GraphTestData
 	{
@@ -9,7 +9,7 @@ namespace Tests
 		{
 			// 1) empty graph
 			{
-				Graph empty = Graph._empty;
+				Graph empty = Graph.Empty;
 
 				yield return new object[] {
 					empty,
@@ -27,7 +27,8 @@ namespace Tests
 
 			// 2) 1 vertex, 0 arcs
 			{
-				GraphBuilder builder = new(1);
+				GraphBuilder builder = new();
+				builder.AddVertex(0);
 
 				yield return new object[] {
 					builder.Build(),
@@ -45,8 +46,8 @@ namespace Tests
 
 			// 3) 1 vertex, 1 reflexive arc
 			{
-				GraphBuilder builder = new(1);
-				builder.AddArc(0, 0);
+				GraphBuilder builder = new();
+				builder.AddArcAndVertices(0, 0);
 
 				yield return new object[] {
 					builder.Build(),
@@ -64,9 +65,9 @@ namespace Tests
 
 			// 4) 1 vertex, 2 reflexive arcs
 			{
-				GraphBuilder builder = new(1);
-				builder.AddArc(0, 0);
-				builder.AddArc(0, 0);
+				GraphBuilder builder = new();
+				builder.AddArcAndVertices(0, 0);
+				builder.AddArcAndVertices(0, 0);
 
 				yield return new object[] {
 					builder.Build(),
@@ -84,7 +85,8 @@ namespace Tests
 
 			// 5) 2 vertexes, 0 arcs
 			{
-				GraphBuilder builder = new(2);
+				GraphBuilder builder = new();
+				builder.AddVertices([0, 1]);
 
 				yield return new object[] {
 					builder.Build(),
@@ -100,10 +102,11 @@ namespace Tests
 				};
 			}
 
-			// 6) 2 vertexes, 1 reflexive arcs
+			// 6) 2 vertexes, 1 reflexive arc
 			{
-				GraphBuilder builder = new(2);
-				builder.AddArc(1, 1);
+				GraphBuilder builder = new();
+				builder.AddArcAndVertices(1, 1);
+				builder.AddVertex(0);
 
 				yield return new object[] {
 					builder.Build(),
@@ -118,11 +121,12 @@ namespace Tests
 					}
 				};
 			}
+
 			// 7) 2 vertexes, 2 reflexive arcs
 			{
-				GraphBuilder builder = new(2);
-				builder.AddArc(0, 0);
-				builder.AddArc(1, 1);
+				GraphBuilder builder = new();
+				builder.AddArcAndVertices(0, 0);
+				builder.AddArcAndVertices(1, 1);
 
 				yield return new object[] {
 					builder.Build(),
@@ -140,10 +144,10 @@ namespace Tests
 
 			// 8) 2 vertexes, 3 reflexive arcs
 			{
-				GraphBuilder builder = new(2);
-				builder.AddArc(0, 0);
-				builder.AddArc(0, 0);
-				builder.AddArc(1, 1);
+				GraphBuilder builder = new();
+				builder.AddArcAndVertices(0, 0);
+				builder.AddArcAndVertices(0, 0);
+				builder.AddArcAndVertices(1, 1);
 
 				yield return new object[] {
 					builder.Build(),
@@ -159,10 +163,10 @@ namespace Tests
 				};
 			}
 
-			// 9) 2 vertexes, 1 arcs
+			// 9) 2 vertexes, 1 arc
 			{
-				GraphBuilder builder = new(2);
-				builder.AddArc(0, 1);
+				GraphBuilder builder = new();
+				builder.AddArcAndVertices(0, 1);
 
 				yield return new object[] {
 					builder.Build(),
@@ -180,9 +184,9 @@ namespace Tests
 
 			// 10) 2 vertexes, 2 arcs
 			{
-				GraphBuilder builder = new(2);
-				builder.AddArc(0, 1);
-				builder.AddArc(1, 0);
+				GraphBuilder builder = new();
+				builder.AddArcAndVertices(0, 1);
+				builder.AddArcAndVertices(1, 0);
 
 				yield return new object[] {
 					builder.Build(),
@@ -200,10 +204,10 @@ namespace Tests
 
 			// 11) 2 vertexes, 3 arcs
 			{
-				GraphBuilder builder = new(2);
-				builder.AddArc(0, 1);
-				builder.AddArc(1, 0);
-				builder.AddArc(0, 1);
+				GraphBuilder builder = new();
+				builder.AddArcAndVertices(0, 1);
+				builder.AddArcAndVertices(1, 0);
+				builder.AddArcAndVertices(0, 1);
 
 				yield return new object[] {
 					builder.Build(),
@@ -221,11 +225,11 @@ namespace Tests
 
 			// 12) 2 vertexes, 4 arcs
 			{
-				GraphBuilder builder = new(2);
-				builder.AddArc(0, 1);
-				builder.AddArc(0, 1);
-				builder.AddArc(1, 0);
-				builder.AddArc(1, 0);
+				GraphBuilder builder = new();
+				builder.AddArcAndVertices(0, 1);
+				builder.AddArcAndVertices(0, 1);
+				builder.AddArcAndVertices(1, 0);
+				builder.AddArcAndVertices(1, 0);
 
 				yield return new object[] {
 					builder.Build(),
@@ -241,11 +245,11 @@ namespace Tests
 				};
 			}
 
-			// 13) 2 vertexes, 1 arcs, 1 reflexive arcs
+			// 13) 2 vertexes, 1 arc, 1 reflexive arc
 			{
-				GraphBuilder builder = new(2);
-				builder.AddArc(0, 1);
-				builder.AddArc(1, 1);
+				GraphBuilder builder = new();
+				builder.AddArcAndVertices(0, 1);
+				builder.AddArcAndVertices(1, 1);
 
 				yield return new object[] {
 					builder.Build(),
@@ -263,11 +267,11 @@ namespace Tests
 
 			// 14) 2 vertexes, 2 arcs, 2 reflexive arcs
 			{
-				GraphBuilder builder = new(2);
-				builder.AddArc(0, 0);
-				builder.AddArc(0, 1);
-				builder.AddArc(1, 1);
-				builder.AddArc(1, 0);
+				GraphBuilder builder = new();
+				builder.AddArcAndVertices(0, 0);
+				builder.AddArcAndVertices(0, 1);
+				builder.AddArcAndVertices(1, 1);
+				builder.AddArcAndVertices(1, 0);
 
 				yield return new object[] {
 					builder.Build(),
@@ -285,11 +289,11 @@ namespace Tests
 
 			// 15) 2 vertexes, 4 arcs, 4 reflexive arcs
 			{
-				GraphBuilder builder = new(2);
-				builder.AddArc(0, 0); builder.AddArc(0, 0);
-				builder.AddArc(1, 1); builder.AddArc(1, 1);
-				builder.AddArc(0, 1); builder.AddArc(0, 1);
-				builder.AddArc(1, 0); builder.AddArc(1, 0);
+				GraphBuilder builder = new();
+				builder.AddArcAndVertices(0, 0); builder.AddArcAndVertices(0, 0);
+				builder.AddArcAndVertices(1, 1); builder.AddArcAndVertices(1, 1);
+				builder.AddArcAndVertices(0, 1); builder.AddArcAndVertices(0, 1);
+				builder.AddArcAndVertices(1, 0); builder.AddArcAndVertices(1, 0);
 
 				yield return new object[] {
 					builder.Build(),
@@ -307,22 +311,22 @@ namespace Tests
 
 			// 16) 5 vertexes, 9 arcs, 2 reflexive arcs
 			{
-				GraphBuilder builder = new(5);
+				GraphBuilder builder = new();
 
 				// cycle: 0 -> 2 -> 4 -> 0
-				builder.AddArc(0, 2);
-				builder.AddArc(2, 4);
-				builder.AddArc(4, 0);
+				builder.AddArcAndVertices(0, 2);
+				builder.AddArcAndVertices(2, 4);
+				builder.AddArcAndVertices(4, 0);
 
 				// ordinal arcs
-				builder.AddArc(0, 1);
-				builder.AddArc(2, 1);
-				builder.AddArc(2, 3);
-				builder.AddArc(4, 3);
+				builder.AddArcAndVertices(0, 1);
+				builder.AddArcAndVertices(2, 1);
+				builder.AddArcAndVertices(2, 3);
+				builder.AddArcAndVertices(4, 3);
 
 				// reflexive arcs
-				builder.AddArc(2, 2);
-				builder.AddArc(3, 3);
+				builder.AddArcAndVertices(2, 2);
+				builder.AddArcAndVertices(3, 3);
 
 				yield return new object[] {
 					builder.Build(),

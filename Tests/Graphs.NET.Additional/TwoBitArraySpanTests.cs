@@ -1,16 +1,16 @@
 ﻿using Graphs.NET.Additional;
 
-namespace TwoBitArrayTests
+namespace Tests.Graphs.NET.Additional
 {
-	public class TwoBitArrayTests
+	public class TwoBitArraySpanTests
 	{
 		[Fact]
 		public void ReadingOneZeroElementTwoBitArrayTest ()
 		{
 			int[] zero = [0];
-			TwoBitArray twoBitArray = new(zero.AsSpan());
+			TwoBitArraySpan twoBitArray = new(zero.AsSpan());
 
-			for ( int i = 0; i < TwoBitArray.GetRequiredLengthFor(zero.Length); i++ )
+			for ( int i = 0; i < TwoBitArraySpan.GetRequiredLengthFor(zero.Length); i++ )
 			{
 				Assert.Equal(0, twoBitArray[i]);
 			}
@@ -20,11 +20,11 @@ namespace TwoBitArrayTests
 		public void ClearingTwoBitArrayTest ()
 		{
 			int[] arr = [1, 2, 3, 4, 5];
-			TwoBitArray twoBitArray = new(arr.AsSpan());
+			TwoBitArraySpan twoBitArray = new(arr.AsSpan());
 
 			twoBitArray.Clear();
 
-			for ( int i = 0; i < TwoBitArray.GetRequiredLengthFor(arr.Length); i++ )
+			for ( int i = 0; i < TwoBitArraySpan.GetRequiredLengthFor(arr.Length); i++ )
 			{
 				Assert.Equal(0, twoBitArray[i]);
 			}
@@ -34,9 +34,9 @@ namespace TwoBitArrayTests
 		public void ReadingOneElementTwoBitArrayTest ()
 		{
 			int[] filled = [~0];
-			TwoBitArray twoBitArray = new(filled.AsSpan());
+			TwoBitArraySpan twoBitArray = new(filled.AsSpan());
 
-			for ( int i = 0; i < TwoBitArray.GetRequiredLengthFor(filled.Length); i++ )
+			for ( int i = 0; i < TwoBitArraySpan.GetRequiredLengthFor(filled.Length); i++ )
 			{
 				Assert.Equal(3, twoBitArray[i]);
 			}
@@ -46,7 +46,7 @@ namespace TwoBitArrayTests
 		public void ReadingTwoElementsTwoBitArrayTest ()
 		{
 			int[] filled = [0, ~0];
-			TwoBitArray twoBitArray = new(filled.AsSpan());
+			TwoBitArraySpan twoBitArray = new(filled.AsSpan());
 
 			for ( int i = 0; i < 16; i++ )
 			{
@@ -62,9 +62,9 @@ namespace TwoBitArrayTests
 		public void WritingOneElementTwoBitArrayTest ()
 		{
 			int[] arr = [0];
-			TwoBitArray twoBitArray = new(arr.AsSpan());
+			TwoBitArraySpan twoBitArray = new(arr.AsSpan());
 
-			for ( int i = 0; i < TwoBitArray.GetRequiredLengthFor(arr.Length); i++ )
+			for ( int i = 0; i < TwoBitArraySpan.GetRequiredLengthFor(arr.Length); i++ )
 			{
 				twoBitArray[i] = i & 3;
 				Assert.Equal(i % 3, twoBitArray[i]);
@@ -72,12 +72,12 @@ namespace TwoBitArrayTests
 
 			twoBitArray.Clear();
 
-			for ( int i = 0; i < TwoBitArray.GetRequiredLengthFor(arr.Length); i++ )
+			for ( int i = 0; i < TwoBitArraySpan.GetRequiredLengthFor(arr.Length); i++ )
 			{
 				twoBitArray[i] = i & 3;
 			}
 
-			for ( int i = 0; i < TwoBitArray.GetRequiredLengthFor(arr.Length); i++ )
+			for ( int i = 0; i < TwoBitArraySpan.GetRequiredLengthFor(arr.Length); i++ )
 			{
 				Assert.Equal(i % 3, twoBitArray[i]);
 			}
@@ -87,9 +87,9 @@ namespace TwoBitArrayTests
 		public void WritingTwoElementsTwoBitArrayTest ()
 		{
 			int[] arr = [0, 0];
-			TwoBitArray twoBitArray = new(arr.AsSpan());
+			TwoBitArraySpan twoBitArray = new(arr.AsSpan());
 
-			for ( int i = 0; i < TwoBitArray.GetRequiredLengthFor(arr.Length); i++ )
+			for ( int i = 0; i < TwoBitArraySpan.GetRequiredLengthFor(arr.Length); i++ )
 			{
 				twoBitArray[i] = i & 3;
 				Assert.Equal(i % 3, twoBitArray[i]);
@@ -97,12 +97,12 @@ namespace TwoBitArrayTests
 
 			twoBitArray.Clear();
 
-			for ( int i = 0; i < TwoBitArray.GetRequiredLengthFor(arr.Length); i++ )
+			for ( int i = 0; i < TwoBitArraySpan.GetRequiredLengthFor(arr.Length); i++ )
 			{
 				twoBitArray[i] = i & 3;
 			}
 
-			for ( int i = 0; i < TwoBitArray.GetRequiredLengthFor(arr.Length); i++ )
+			for ( int i = 0; i < TwoBitArraySpan.GetRequiredLengthFor(arr.Length); i++ )
 			{
 				Assert.Equal(i % 3, twoBitArray[i]);
 			}

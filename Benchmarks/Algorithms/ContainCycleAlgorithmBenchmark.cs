@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using Benchmarks.Extensions;
+using Graphs.NET.Algorithms;
 using Graphs.NET.Core;
 using Microsoft.VSDiagnostics;
 using QuikGraph;
@@ -44,13 +45,15 @@ namespace Benchmarks.Algorithms
 			{
 				int from = random.Next(0, VertexCount), to = random.Next(0, VertexCount);
 
-				_graphBuilder.AddArc(from, to);
+				_graphBuilder.AddArcAndVertices(from, to);
 
-				if ( !_naiveGraph.ContainsKey(from) )
+				if ( !_naiveGraph.TryGetValue(from, out List<int> value) )
 				{
-					_naiveGraph.Add(from, []);
+					value = [];
+					_naiveGraph.Add(from, value);
 				}
-				_naiveGraph[from].Add(to);
+
+				value.Add(to);
 
 				_quikGraphBuilder.AddEdge(new Edge<int>(from, to));
 			}
@@ -73,8 +76,7 @@ namespace Benchmarks.Algorithms
 		[Benchmark(Baseline = true)]
 		public bool GraphsNET_CycleDetection ()
 		{
-			_graph._isAcyclicCalculated = false;
-			return _graph.CalculateIsAcyclic();
+			return GraphAlgorithmsExtensions.CalculateIsAcyclic(_graph);
 		}
 	}
 }

@@ -1,34 +1,10 @@
 ﻿using Graphs.NET.Core;
-using Tests;
+using Tests.Data;
 
-namespace GraphTests
+namespace Tests.Graphs.NET.Core
 {
-	public class GraphWithoutWeightsAndDataTests
+	public class GraphWithWeightsAndWithoutDataTests
 	{
-		[Fact]
-		public void EmptyGraphEqualityTests ()
-		{
-			Graph empty1 = Graph<Nothing, Nothing>.GetEmpty();
-			Graph empty2 = Graph<Nothing, Nothing>.GetEmpty();
-
-			Assert.True(ReferenceEquals(empty1, empty2));
-
-			Graph empty3 = Graph<int, Nothing>.GetEmpty();
-			Graph empty4 = Graph<int, Nothing>.GetEmpty();
-
-			Assert.True(ReferenceEquals(empty3, empty4));
-
-			Graph empty5 = Graph<Nothing, string>.GetEmpty();
-			Graph empty6 = Graph<Nothing, string>.GetEmpty();
-
-			Assert.True(ReferenceEquals(empty5, empty6));
-
-			Graph empty7 = Graph<string, int>.GetEmpty();
-			Graph empty8 = Graph<string, int>.GetEmpty();
-
-			Assert.True(ReferenceEquals(empty7, empty8));
-		}
-
 		[Theory]
 		[MemberData(nameof(GraphTestData.GetGraphsAndExpectedWithoutWeightsAndData), MemberType = typeof(GraphTestData))]
 		public void VertexCountTests (Graph graph, ExpectedGraph expected)
@@ -86,6 +62,7 @@ namespace GraphTests
 
 				for ( int i = 0; i < expectedNeighbors.Length; i++ )
 				{
+					int expectedNeighbor = expectedNeighbors[i];
 					Assert.Equal(expectedNeighbors[i], graphNeighbors[i]);
 				}
 			}
@@ -97,26 +74,6 @@ namespace GraphTests
 		{
 			Assert.Throws<ArgumentOutOfRangeException>(() => graph.GetNeighbors(-1));
 			Assert.Throws<ArgumentOutOfRangeException>(() => graph.GetNeighbors(expected.Neighbors.Length));
-		}
-
-		[Theory]
-		[MemberData(nameof(GraphTestData.GetGraphsAndExpectedWithoutWeightsAndData), MemberType = typeof(GraphTestData))]
-		public void HasArcTests (Graph graph, ExpectedGraph expected)
-		{
-			for ( int vertex = 0; vertex < expected.Neighbors.Length; vertex++ )
-			{
-				int[] expectedNeighbors = expected.Neighbors[vertex];
-				if ( expectedNeighbors.Length > 0 )
-				{
-					ReadOnlySpan<int> graphNeighbors = graph.GetNeighbors(vertex);
-
-					for ( int i = 0; i < expectedNeighbors.Length; i++ )
-					{
-						int expectedNeighbor = expectedNeighbors[i];
-						Assert.True(graph.HasArc(vertex, expectedNeighbor));
-					}
-				}
-			}
 		}
 	}
 }

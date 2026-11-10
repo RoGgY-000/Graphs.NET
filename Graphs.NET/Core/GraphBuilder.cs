@@ -1,28 +1,29 @@
 ﻿using System.Buffers;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using Graphs.NET.Additional;
 
 namespace Graphs.NET.Core
 {
 	public class GraphBuilder
 	{
-		protected int _vertexCapacity;
-		protected int[] _heads;
+		private protected OneBitArray _removedVertices;
+		protected int[] _tails;
 		protected int[] _targets;
 		protected int[] _nexts;
 
-		public int VertexCount { get; protected set; }
 		public int EdgeCapacity { get; protected set; }
 		public int EdgeCount { get; protected set; }
+		public int VertexCapacity { get; protected set; }
+		public int VertexCount { get; protected set; }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public GraphBuilder (int v = 0, int u = 0)
+		public GraphBuilder (int vertexCapacity = 0, int edgeCapacity = 0)
 		{
-			ArgumentOutOfRangeException.ThrowIfNegative(v);
-			ArgumentOutOfRangeException.ThrowIfNegative(u);
-
-			EnsureVertexCountOrResize(v);
-			EnsureEdgeCapacityOrResize(u);
+			ArgumentOutOfRangeException.ThrowIfNegative(vertexCapacity);
+			ArgumentOutOfRangeException.ThrowIfNegative(edgeCapacity);
+			EnsureVertexCapacityOrResize(vertexCapacity);
+			EnsureEdgeCapacityOrResize(edgeCapacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -31,8 +32,38 @@ namespace Graphs.NET.Core
 			ArgumentOutOfRangeException.ThrowIfNegative(from);
 			ArgumentOutOfRangeException.ThrowIfNegative(to);
 
-			EnsureVertexCountOrResize(Math.Max(from, to) + 1);
+			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(from, VertexCapacity);
+			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(to, VertexCapacity);
+
+			if ( _removedVertices[from] == 1 || _removedVertices[to] == 1 )
+			{
+				throw new ArgumentOutOfRangeException();
+			}
+
 			EnsureEdgeCapacityOrResize(EdgeCount + 1);
+
+			InsertArc(from, to);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void AddArcAndVertices (int from, int to)
+		{
+			ArgumentOutOfRangeException.ThrowIfNegative(from);
+			ArgumentOutOfRangeException.ThrowIfNegative(to);
+
+			EnsureVertexCapacityOrResize(Math.Max(from, to) + 1);
+			EnsureEdgeCapacityOrResize(EdgeCount + 1);
+
+			if ( _removedVertices[from] == 1 )
+			{
+				_removedVertices[from] = 0;
+				VertexCount++;
+			}
+			if ( _removedVertices[to] == 1 )
+			{
+				_removedVertices[to] = 0;
+				VertexCount++;
+			}
 
 			InsertArc(from, to);
 		}
@@ -43,7 +74,14 @@ namespace Graphs.NET.Core
 			ArgumentOutOfRangeException.ThrowIfNegative(v1);
 			ArgumentOutOfRangeException.ThrowIfNegative(v2);
 
-			EnsureVertexCountOrResize(Math.Max(v1, v2) + 1);
+			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(v1, VertexCapacity);
+			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(v2, VertexCapacity);
+
+			if ( _removedVertices[v1] == 1 || _removedVertices[v2] == 1 )
+			{
+				throw new ArgumentOutOfRangeException();
+			}
+
 			EnsureEdgeCapacityOrResize(EdgeCount + 2);
 
 			if ( v1 != v2 )
@@ -52,6 +90,57 @@ namespace Graphs.NET.Core
 			}
 
 			InsertArc(v1, v2);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void AddEdgeAndVertices (int v1, int v2)
+		{
+			ArgumentOutOfRangeException.ThrowIfNegative(v1);
+			ArgumentOutOfRangeException.ThrowIfNegative(v2);
+
+			EnsureVertexCapacityOrResize(Math.Max(v1, v2) + 1);
+			EnsureEdgeCapacityOrResize(EdgeCount + 2);
+
+			if ( _removedVertices[v1] == 1 )
+			{
+				_removedVertices[v1] = 0;
+				VertexCount++;
+			}
+			if ( _removedVertices[v2] == 1 )
+			{
+				_removedVertices[v2] = 0;
+				VertexCount++;
+			}
+
+			if ( v1 != v2 )
+			{
+				InsertArc(v2, v1);
+			}
+
+			InsertArc(v1, v2);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void AddVertex (int vertex)
+		{
+			ArgumentOutOfRangeException.ThrowIfNegative(vertex);
+
+			EnsureVertexCapacityOrResize(vertex + 1);
+
+			if ( _removedVertices[vertex] == 1 )
+			{
+				_removedVertices[vertex] = 0;
+				VertexCount++;
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void AddVertices(ReadOnlySpan<int> vertices)
+		{
+			for ( int i = 0; i < vertices.Length; i++ )
+			{
+				AddVertex(vertices[i]);
+			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -73,44 +162,136 @@ namespace Graphs.NET.Core
 
 			try
 			{
-				for ( int vertex = 0; vertex < VertexCount; vertex++ )
+				for ( int vertex = 0; vertex < VertexCapacity; vertex++ )
 				{
-					int pointer = _heads[vertex];
-					int currentVertexOffset = 0;
-					while ( pointer != -1 )
+					if ( _removedVertices[vertex] == 0 )
 					{
-						int target = _targets[pointer];
-						bool add = true;
-						if ( target == vertex )
+						int pointer = _tails[vertex];
+						int currentVertexOffset = 0;
+						while ( pointer != -1 )
 						{
-							if ( !options.enableReflexiveArcs )
+							int target = _targets[pointer];
+							bool add = true;
+							if ( target == vertex )
+							{
+								if ( !options.enableReflexiveArcs )
+								{
+									add = false;
+								}
+							}
+							if ( !options.enableDuplicateArcs
+							&& temporaryTargets.AsSpan(offsets[vertex], currentVertexOffset).Contains(target) )
 							{
 								add = false;
 							}
-						}
-						if ( !options.enableDuplicateArcs
-						&& temporaryTargets.AsSpan(offsets[vertex], currentVertexOffset).Contains(target) )
-						{
-							add = false;
-						}
 
-						if ( add )
-						{
-							temporaryTargets[offsets[vertex] + currentVertexOffset++] = target;
+							if ( add )
+							{
+								temporaryTargets[offsets[vertex] + currentVertexOffset++] = target;
+							}
+							pointer = _nexts[pointer];
 						}
-						pointer = _nexts[pointer];
+						offsets[vertex + 1] = offsets[vertex] + currentVertexOffset;
+						totalEdgeCount += currentVertexOffset;
 					}
-					offsets[vertex + 1] = offsets[vertex] + currentVertexOffset;
-					totalEdgeCount += currentVertexOffset;
 				}
 				int[] targets = new int[totalEdgeCount];
 				temporaryTargets.AsSpan(0, totalEdgeCount).CopyTo(targets.AsSpan());
-				Graph g = new(offsets, targets, options);
+				OneBitArray removed = new(_removedVertices);
+				Graph g = new(VertexCount, totalEdgeCount, offsets, targets, removed, options);
 				return g;
 			}
 			finally
 			{
 				pool.Return(temporaryTargets);
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool HasArc (int from, int to)
+		{
+			ArgumentOutOfRangeException.ThrowIfNegative(from);
+			ArgumentOutOfRangeException.ThrowIfNegative(to);
+
+			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(from, VertexCapacity);
+			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(to, VertexCapacity);
+
+			if ( _removedVertices[from] == 1 || _removedVertices[to] == 1 )
+			{
+				throw new ArgumentOutOfRangeException();
+			}
+
+			int pointer = _tails[from];
+			while ( pointer != -1 )
+			{
+				if ( _targets[pointer] == to )
+				{
+					return true;
+				}
+				pointer = _nexts[pointer];
+			}
+			return false;
+
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool HasVertex (int vertex)
+		{
+			ArgumentOutOfRangeException.ThrowIfNegative(vertex);
+
+			return vertex < VertexCapacity && _removedVertices[vertex] == 0;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void RemoveArc (int from, int to)
+		{
+			ArgumentOutOfRangeException.ThrowIfNegative(from);
+			ArgumentOutOfRangeException.ThrowIfNegative(to);
+
+			if ( from >= VertexCapacity || to >= VertexCapacity
+				|| _removedVertices[from] == 1 || _removedVertices[to] == 1 )
+			{
+				return;
+			}
+
+			int pointer = _tails[from];
+			while ( pointer != -1 )
+			{
+				if ( _targets[pointer] == to )
+				{
+					int currentPosition = pointer;
+					int nextPosition = _nexts[currentPosition];
+					while ( nextPosition != -1 )
+					{
+						_nexts[currentPosition] = _nexts[nextPosition];
+						currentPosition = nextPosition;
+						nextPosition = _nexts[nextPosition];
+					}
+				}
+			}
+			return;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void RemoveVertex (int vertex)
+		{
+			ArgumentOutOfRangeException.ThrowIfNegative(vertex);
+
+			if ( vertex >= VertexCapacity )
+			{
+				return;
+			}
+			else if ( _removedVertices[vertex] == 0 )
+			{
+				int pointer = _tails[vertex], next;
+				while ( pointer != -1 )
+				{
+					next = _nexts[pointer];
+					_nexts[pointer] = -1;
+					pointer = next;
+				}
+				_removedVertices[vertex] = 1;
+				VertexCount--;
 			}
 		}
 
@@ -130,23 +311,17 @@ namespace Graphs.NET.Core
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void EnsureVertexCountOrResize (int count)
+		protected void EnsureVertexCapacityOrResize (int capacity)
 		{
-			if ( count <= VertexCount )
+			if ( capacity <= VertexCapacity )
 			{
-				return;
-			}
-			else if ( count <= _vertexCapacity )
-			{
-				VertexCount = count;
 				return;
 			}
 			else
 			{
-				int newCapacity = (int) BitOperations.RoundUpToPowerOf2((uint) count);
-				ResizeVertexes(newCapacity);
-				_vertexCapacity = newCapacity;
-				VertexCount = count;
+				int newCapacity = (int) BitOperations.RoundUpToPowerOf2((uint) capacity);
+				ResizeVertices(newCapacity);
+				VertexCapacity = newCapacity;
 			}
 		}
 
@@ -154,8 +329,8 @@ namespace Graphs.NET.Core
 		protected int InsertArc (int from, int to)
 		{
 			_targets[EdgeCount] = to;
-			_nexts[EdgeCount] = _heads[from];
-			_heads[from] = EdgeCount;
+			_nexts[EdgeCount] = _tails[from];
+			_tails[from] = EdgeCount;
 			return EdgeCount++;
 		}
 
@@ -168,10 +343,13 @@ namespace Graphs.NET.Core
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected virtual void ResizeVertexes (int newCapacity)
+		protected virtual void ResizeVertices (int newCapacity)
 		{
-			Array.Resize(ref _heads, newCapacity);
-			_heads.AsSpan(VertexCount, newCapacity - VertexCount).Fill(-1);
+			OneBitArray.Resize(ref _removedVertices, newCapacity);
+			_removedVertices.SetRange(VertexCount, newCapacity - VertexCount, 1);
+
+			Array.Resize(ref _tails, newCapacity);
+			_tails.AsSpan(VertexCount, newCapacity - VertexCount).Fill(-1);
 		}
 	}
 
@@ -182,48 +360,123 @@ namespace Graphs.NET.Core
 		protected TEdgeWeight[] _weights;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public GraphBuilder (int v = 0, int u = 0) : base(v, u)
+		public GraphBuilder (int vertexCapacity = 0, int edgeCapacity = 0) : base(vertexCapacity, edgeCapacity)
 		{
 
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void AddArc (int from, int to, TEdgeWeight w)
+		public void AddArc (int from, int to, TEdgeWeight weight)
 		{
+			if ( !typeof(TEdgeWeight).IsValueType )
+			{
+				ArgumentNullException.ThrowIfNull(weight);
+			}
+
 			ArgumentOutOfRangeException.ThrowIfNegative(from);
 			ArgumentOutOfRangeException.ThrowIfNegative(to);
 			
-			if ( !typeof(TEdgeWeight).IsValueType )
+			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(from, VertexCapacity);
+			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(to, VertexCapacity);
+
+			if ( _removedVertices[from] == 1 || _removedVertices[to] == 1 )
 			{
-				ArgumentNullException.ThrowIfNull(w);
+				throw new ArgumentOutOfRangeException();
 			}
 
-			EnsureVertexCountOrResize(Math.Max(from, to) + 1);
 			EnsureEdgeCapacityOrResize(EdgeCount + 1);
 
-			InsertArc(from, to, w);
+			InsertArc(from, to, weight);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void AddEdge (int v1, int v2, TEdgeWeight w)
+		public void AddArcAndVertices (int from, int to, TEdgeWeight weight)
 		{
+			if ( !typeof(TEdgeWeight).IsValueType )
+			{
+				ArgumentNullException.ThrowIfNull(weight);
+			}
+
+			ArgumentOutOfRangeException.ThrowIfNegative(from);
+			ArgumentOutOfRangeException.ThrowIfNegative(to);
+
+			EnsureVertexCapacityOrResize(Math.Max(from, to) + 1);
+			EnsureEdgeCapacityOrResize(EdgeCount + 1);
+
+			if ( _removedVertices[from] == 1 )
+			{
+				_removedVertices[from] = 0;
+				VertexCount++;
+			}
+			if ( _removedVertices[to] == 1 )
+			{
+				_removedVertices[to] = 0;
+				VertexCount++;
+			}
+
+			InsertArc(from, to, weight);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void AddEdge (int v1, int v2, TEdgeWeight weight)
+		{
+			if ( !typeof(TEdgeWeight).IsValueType )
+			{
+				ArgumentNullException.ThrowIfNull(weight);
+			}
+
 			ArgumentOutOfRangeException.ThrowIfNegative(v1);
 			ArgumentOutOfRangeException.ThrowIfNegative(v2);
 
-			if ( !typeof(TEdgeWeight).IsValueType )
+			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(v1, VertexCapacity);
+			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(v2, VertexCapacity);
+
+			if ( _removedVertices[v1] == 1 || _removedVertices[v2] == 1 )
 			{
-				ArgumentNullException.ThrowIfNull(w);
+				throw new ArgumentOutOfRangeException();
 			}
 
 			EnsureEdgeCapacityOrResize(EdgeCount + 2);
-			EnsureVertexCountOrResize(Math.Max(v1, v2) + 1);
 
 			if ( v1 != v2 )
 			{
-				InsertArc(v2, v1, w);
+				InsertArc(v2, v1, weight);
 			}
 
-			InsertArc(v1, v2, w);
+			InsertArc(v1, v2, weight);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void AddEdgeAndVertices (int v1, int v2, TEdgeWeight weight)
+		{
+			if ( !typeof(TEdgeWeight).IsValueType )
+			{
+				ArgumentNullException.ThrowIfNull(weight);
+			}
+
+			ArgumentOutOfRangeException.ThrowIfNegative(v1);
+			ArgumentOutOfRangeException.ThrowIfNegative(v2);
+
+			EnsureVertexCapacityOrResize(Math.Max(v1, v2) + 1);
+			EnsureEdgeCapacityOrResize(EdgeCount + 2);
+
+			if ( _removedVertices[v1] == 1 )
+			{
+				_removedVertices[v1] = 0;
+				VertexCount++;
+			}
+			if ( _removedVertices[v2] == 1 )
+			{
+				_removedVertices[v2] = 0;
+				VertexCount++;
+			}
+
+			if ( v1 != v2 )
+			{
+				InsertArc(v2, v1, weight);
+			}
+
+			InsertArc(v1, v2, weight);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -250,7 +503,7 @@ namespace Graphs.NET.Core
 			{
 				for ( int vertex = 0; vertex < VertexCount; vertex++ )
 				{
-					int pointer = _heads[vertex];
+					int pointer = _tails[vertex];
 					int currentVertexOffset = 0;
 					while ( pointer != -1 )
 					{
@@ -285,7 +538,9 @@ namespace Graphs.NET.Core
 				TEdgeWeight[] weights = new TEdgeWeight[totalEdgeCount];
 				temporaryWeights.AsSpan(0, totalEdgeCount).CopyTo(weights.AsSpan());
 
-				Graph<TEdgeWeight> g = new(offsets, targets, options, weights);
+				OneBitArray removed = new(_removedVertices);
+
+				Graph<TEdgeWeight> g = new(VertexCount, totalEdgeCount, offsets, targets, removed, options, weights);
 				return g;
 			}
 			finally
@@ -293,6 +548,33 @@ namespace Graphs.NET.Core
 				intPool.Return(temporaryTargets);
 				weightPool.Return(temporaryWeights);
 			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public TEdgeWeight GetWeight (int from, int to)
+		{
+			ArgumentOutOfRangeException.ThrowIfNegative(from);
+			ArgumentOutOfRangeException.ThrowIfNegative(to);
+
+			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(from, VertexCapacity);
+			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(to, VertexCapacity);
+
+			if ( _removedVertices[from] == 1 || _removedVertices[to] == 1 )
+			{
+				throw new ArgumentOutOfRangeException();
+			}
+
+			int pointer = _tails[from];
+			while ( pointer != -1 )
+			{
+				if ( _targets[pointer] == to )
+				{
+					return _weights[pointer];
+				}
+				pointer = _nexts[pointer];
+			}
+
+			throw new InvalidOperationException();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -316,22 +598,51 @@ namespace Graphs.NET.Core
 	{
 		private TVertexData[] _data;
 
-		public GraphBuilder (int v = 0, int u = 0) : base(v, u)
+		public GraphBuilder (int vertexCapacity = 0, int edgeCapacity = 0) : base(vertexCapacity, edgeCapacity)
 		{
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void SetVertexData (int v, TVertexData d)
+		public void AddVertex (int vertex, TVertexData data)
 		{
-			ArgumentOutOfRangeException.ThrowIfNegative(v);
-			
 			if ( !typeof(TVertexData).IsValueType )
 			{
-				ArgumentNullException.ThrowIfNull(d);
+				ArgumentNullException.ThrowIfNull(data);
 			}
 
-			EnsureVertexCountOrResize(v + 1);
-			_data[v] = d;
+			ArgumentOutOfRangeException.ThrowIfNegative(vertex);
+
+			EnsureVertexCapacityOrResize(vertex + 1);
+
+			if ( _removedVertices[vertex] == 1 )
+			{
+				_removedVertices[vertex] = 0;
+				VertexCount++;
+			}
+
+			_data[vertex] = data;
+
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void SetVertexData (int vertex, TVertexData data)
+		{
+			if ( !typeof(TVertexData).IsValueType )
+			{
+				ArgumentNullException.ThrowIfNull(data);
+			}
+
+			ArgumentOutOfRangeException.ThrowIfNegative(vertex);
+			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(vertex, VertexCapacity);
+
+			if ( _removedVertices[vertex] == 1 )
+			{
+				throw new ArgumentOutOfRangeException();
+			}
+			
+			EnsureVertexCapacityOrResize(vertex + 1);
+
+			_data[vertex] = data;
 		}
 
 		public override Graph<TEdgeWeight, TVertexData> Build () => Build(GraphBuildingOptions.Default);
@@ -356,7 +667,7 @@ namespace Graphs.NET.Core
 			{
 				for ( int vertex = 0; vertex < VertexCount; vertex++ )
 				{
-					int pointer = _heads[vertex];
+					int pointer = _tails[vertex];
 					int currentVertexOffset = 0;
 					while ( pointer != -1 )
 					{
@@ -394,7 +705,9 @@ namespace Graphs.NET.Core
 				TVertexData[] data = new TVertexData[VertexCount];
 				_data.AsSpan(0, VertexCount).CopyTo(data.AsSpan());
 
-				Graph<TEdgeWeight, TVertexData> g = new(offsets, targets, options, weights, data);
+				OneBitArray removed = new(_removedVertices);
+
+				Graph<TEdgeWeight, TVertexData> g = new(VertexCount, totalEdgeCount, offsets, targets, removed, options, weights, data);
 				return g;
 			}
 			finally
@@ -405,9 +718,9 @@ namespace Graphs.NET.Core
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override void ResizeVertexes (int newCapacity)
+		protected override void ResizeVertices (int newCapacity)
 		{
-			base.ResizeVertexes(newCapacity);
+			base.ResizeVertices(newCapacity);
 			Array.Resize(ref _data, newCapacity);
 		}
 	}

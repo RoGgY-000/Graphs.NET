@@ -89,13 +89,13 @@ namespace Benchmarks.Extensions
 
 			return false;
 		}
-	/// <summary>
-    /// Наивный поиск циклов в ориентированном графе с использованием HashSet и рекурсии.
-    /// </summary>
-    /// <param name="graph">Граф в виде Dictionary.</param>
-    /// <param name="vertexCount">Общее количество вершин (от 0 до N-1).</param>
-    /// <returns>True, если в графе есть хотя бы один цикл; иначе False.</returns>
-    public static bool RunNaiveCycleDetection (Dictionary<int, List<int>> graph, int vertexCount)
+		/// <summary>
+		/// Наивный поиск циклов в ориентированном графе с использованием HashSet и рекурсии.
+		/// </summary>
+		/// <param name="graph">Граф в виде Dictionary.</param>
+		/// <param name="vertexCount">Общее количество вершин (от 0 до N-1).</param>
+		/// <returns>True, если в графе есть хотя бы один цикл; иначе False.</returns>
+		public static bool RunNaiveCycleDetection (Dictionary<int, List<int>> graph, int vertexCount)
 
 		{
 			// Выделяем память под глобальный список посещенных и стек текущей рекурсии

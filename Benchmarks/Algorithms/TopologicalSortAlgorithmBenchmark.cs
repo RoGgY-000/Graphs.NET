@@ -16,9 +16,9 @@ namespace Benchmarks.Algorithms
 	[RankColumn]
 	public class TopologicalSortAlgorithmBenchmark
 	{
-		[Params(10_000)]
+		[Params(1)]
 		public int VertexCount;
-		[Params(100, 10_000, 1_000_000)]
+		[Params(1, 100, 10_000, 1_000_000)]
 		public int ArcCount;
 
 		private int[] _sharedBuffer;
@@ -49,7 +49,7 @@ namespace Benchmarks.Algorithms
 			{
 				int from = random.Next(0, VertexCount), to = random.Next(0, VertexCount);
 
-				_graphBuilder.AddArc(from, to);
+				_graphBuilder.AddArcAndVertices(from, to);
 
 				if ( !_naiveGraph.ContainsKey(from) )
 				{

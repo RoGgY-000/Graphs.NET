@@ -10,7 +10,7 @@ namespace Graphs.NET.Algorithms
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool TryTopologicalSort (this Graph g, Span<int> destination)
 		{
-			if ( destination.IsEmpty || destination.Length < g.VertexCount )
+			if ( (destination.IsEmpty && g.VertexCount > 0) || destination.Length < g.VertexCount )
 			{
 				throw new ArgumentException("destination span must be greater than or equal to graph vertex count");
 			}
@@ -36,15 +36,25 @@ namespace Graphs.NET.Algorithms
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void TopologicalSortInCertainlyAcyclicGraph (Graph g, Span<int> destination)
 		{
+			if ( g.VertexCount == 0 )
+			{
+				return;
+			}
+			else if ( g.VertexCount == 1 )
+			{
+				destination[0] = 0;
+				return;
+			}
+
 			int resultIndex = g.VertexCount - 1;
 			int stackEnd = 0;
 			int[] vStack = ArrayPool<int>.Shared.Rent(g.VertexCount);
 			int[] nStack = ArrayPool<int>.Shared.Rent(g.VertexCount);
 
-			int TwoBitArrayLength = TwoBitArray.GetRequiredLengthFor(g.VertexCount);
+			int TwoBitArrayLength = TwoBitArraySpan.GetRequiredLengthFor(g.VertexCount);
 			int[] visitedArray = ArrayPool<int>.Shared.Rent(TwoBitArrayLength);
 			visitedArray.AsSpan(0, TwoBitArrayLength).Clear();
-			TwoBitArray visited = new(visitedArray.AsSpan());
+			TwoBitArraySpan visited = new(visitedArray.AsSpan());
 
 			try
 			{
@@ -95,15 +105,25 @@ namespace Graphs.NET.Algorithms
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static bool TopologicalSortWithAcyclicityCheck (Graph g, Span<int> destination)
 		{
+			if ( g.VertexCount == 0 )
+			{
+				return true;
+			}
+			else if ( g.VertexCount == 1 )
+			{
+				destination[0] = 0;
+				return !g.HasArc(0, 0);
+			}
+
 			int resultIndex = g.VertexCount - 1;
 			int stackEnd = 0;
 			int[] vStack = ArrayPool<int>.Shared.Rent(g.VertexCount);
 			int[] nStack = ArrayPool<int>.Shared.Rent(g.VertexCount);
 
-			int TwoBitArrayLength = TwoBitArray.GetRequiredLengthFor(g.VertexCount);
+			int TwoBitArrayLength = TwoBitArraySpan.GetRequiredLengthFor(g.VertexCount);
 			int[] visitedArray = ArrayPool<int>.Shared.Rent(TwoBitArrayLength);
 			visitedArray.AsSpan(0, TwoBitArrayLength).Clear();
-			TwoBitArray visited = new(visitedArray.AsSpan());
+			TwoBitArraySpan visited = new(visitedArray.AsSpan());
 
 			try
 			{
@@ -169,10 +189,10 @@ namespace Graphs.NET.Algorithms
 			int[] vertexStack = ArrayPool<int>.Shared.Rent(g.VertexCount);
 			int[] neighborStack = ArrayPool<int>.Shared.Rent(g.VertexCount);
 
-			int TwoBitArrayLength = TwoBitArray.GetRequiredLengthFor(g.VertexCount);
+			int TwoBitArrayLength = TwoBitArraySpan.GetRequiredLengthFor(g.VertexCount);
 			int[] visitedArray = ArrayPool<int>.Shared.Rent(TwoBitArrayLength);
 			visitedArray.AsSpan(0, TwoBitArrayLength).Clear();
-			TwoBitArray visited = new(visitedArray.AsSpan());
+			TwoBitArraySpan visited = new(visitedArray.AsSpan());
 
 			try
 			{

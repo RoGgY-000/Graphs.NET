@@ -1,9 +1,9 @@
 ﻿using Graphs.NET.Core;
-using Tests;
+using Tests.Data;
 
-namespace GraphTests
+namespace Tests.Graphs.NET.Core
 {
-	public class GraphWithWeightsAndWithoutDataTests
+	public class GraphWithoutWeightsAndDataTests
 	{
 		[Theory]
 		[MemberData(nameof(GraphTestData.GetGraphsAndExpectedWithoutWeightsAndData), MemberType = typeof(GraphTestData))]
@@ -62,7 +62,6 @@ namespace GraphTests
 
 				for ( int i = 0; i < expectedNeighbors.Length; i++ )
 				{
-					int expectedNeighbor = expectedNeighbors[i];
 					Assert.Equal(expectedNeighbors[i], graphNeighbors[i]);
 				}
 			}
@@ -74,6 +73,26 @@ namespace GraphTests
 		{
 			Assert.Throws<ArgumentOutOfRangeException>(() => graph.GetNeighbors(-1));
 			Assert.Throws<ArgumentOutOfRangeException>(() => graph.GetNeighbors(expected.Neighbors.Length));
+		}
+
+		[Theory]
+		[MemberData(nameof(GraphTestData.GetGraphsAndExpectedWithoutWeightsAndData), MemberType = typeof(GraphTestData))]
+		public void HasArcTests (Graph graph, ExpectedGraph expected)
+		{
+			for ( int vertex = 0; vertex < expected.Neighbors.Length; vertex++ )
+			{
+				int[] expectedNeighbors = expected.Neighbors[vertex];
+				if ( expectedNeighbors.Length > 0 )
+				{
+					ReadOnlySpan<int> graphNeighbors = graph.GetNeighbors(vertex);
+
+					for ( int i = 0; i < expectedNeighbors.Length; i++ )
+					{
+						int expectedNeighbor = expectedNeighbors[i];
+						Assert.True(graph.HasArc(vertex, expectedNeighbor));
+					}
+				}
+			}
 		}
 	}
 }
