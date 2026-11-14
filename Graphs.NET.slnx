@@ -3,7 +3,7 @@
     <Project Path="Benchmarks/Benchmarks.csproj" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="Graphs.NET/Graphs.NET.csproj" />
+    <Project Path="src/Graphs.NET.csproj" />
   </Folder>
   <Folder Name="/Tests/">
     <File Path="global.json" />

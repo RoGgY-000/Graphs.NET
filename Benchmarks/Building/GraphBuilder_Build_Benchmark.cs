@@ -8,17 +8,14 @@ using QuikGraph;
 
 namespace Benchmarks.Building
 {
-	[CPUUsageDiagnoser]
 	[MemoryDiagnoser]
 	[Orderer(BenchmarkDotNet.Order.SummaryOrderPolicy.FastestToSlowest)]
 	[RankColumn]
 	[HideColumns("Job", "RatioSD", "Error", "StdDev", "Median")]
-	public class GraphBuildingBenchmark
+	public abstract class GraphBuilder_Build_Benchmark
 	{
-		[Params(1_000)]
-		public int VertexCount;
-		[Params(1_000)]
-		public int ArcCount;
+		public virtual int VertexCount { get; set; }
+		public virtual int ArcCount { get; set; }
 
 		private GraphBuilder _graphBuilder;
 		private Graph _graph;
@@ -43,28 +40,43 @@ namespace Benchmarks.Building
 
 				_graphBuilder.AddArcAndVertices(from, to);
 			}
-			Console.WriteLine(_graphBuilder.ArcCapacity);
-			Console.WriteLine(_graphBuilder.ArcCount);
-			Console.WriteLine(_graphBuilder.VertexCapacity);
-			Console.WriteLine(_graphBuilder.VertexCount);
 		}
 
-		//[Benchmark]
-		//public void QuikGraph_ToArrayAdjacencyGraph ()
-		//{
-		//	arrayAdjacencyGraph = _adjacencyGraph.ToArrayAdjacencyGraph();
-		//}
+		[Benchmark]
+		[MaxIterationCount(25)]
+		public void QuikGraph_ToArrayAdjacencyGraph ()
+		{
+			arrayAdjacencyGraph = _adjacencyGraph.ToArrayAdjacencyGraph();
+		}
 
-		//[Benchmark]
-		//public void QuikGraph_ToCompressedSparseRowGraph ()
-		//{
-		//	_csrGraph = _adjacencyGraph.ToCompressedRowGraph();
-		//}
+		[Benchmark]
+		[MaxIterationCount(25)]
+		public void QuikGraph_ToCompressedSparseRowGraph ()
+		{
+			_csrGraph = _adjacencyGraph.ToCompressedRowGraph();
+		}
 
 		[Benchmark(Baseline = true)]
+		[MaxIterationCount(25)]
 		public void GraphsNET_Build ()
 		{
 			_graph = _graphBuilder.Build();
 		}
+	}
+
+	public class Small_GraphBuilder_Build_Benchmark : GraphBuilder_Build_Benchmark
+	{
+		[Params(1, 10, 100)]
+		public override int VertexCount { get; set; }
+		[Params(1, 10, 100)]
+		public override int ArcCount { get; set; }
+	}
+
+	public class Medium_GraphBuilder_Build_Benchmark : GraphBuilder_Build_Benchmark
+	{
+		[Params(1_000, 10_000, 50_000)]
+		public override int VertexCount { get; set; }
+		[Params(1_000, 10_000, 50_000)]
+		public override int ArcCount { get; set; }
 	}
 }

@@ -16,11 +16,11 @@ namespace Benchmarks.Building
 		public virtual int VertexCapacity { get; set; }
 		public virtual int EdgeCount { get; set; }
 
-		protected int[] _edges;
+		private int[] _edges;
 
-		protected GraphBuilder _graphBuilder;
-		protected Dictionary<int, List<int>> _naiveGraph;
-		protected AdjacencyGraph<int, Edge<int>> _quikGraphBuilder;
+		private GraphBuilder _graphBuilder;
+		private Dictionary<int, List<int>> _naiveGraph;
+		private UndirectedGraph<int, Edge<int>> _quikGraphBuilder;
 
 		[GlobalSetup]
 		public void Setup ()
@@ -39,7 +39,7 @@ namespace Benchmarks.Building
 
 		[Benchmark]
 		[MaxIterationCount(25)]
-		public void Naive_AddArcs ()
+		public void Naive_AddEdge ()
 		{
 			_naiveGraph = new(VertexCapacity);
 			for ( int i = 0; i < EdgeCount; i++ )
@@ -64,19 +64,19 @@ namespace Benchmarks.Building
 		[MaxIterationCount(25)]
 		public void QuikGraph_AddVerticesAndEdge ()
 		{
-			_quikGraphBuilder = new(true, VertexCapacity, EdgeCount*2);
+			_quikGraphBuilder = new();
 			for ( int i = 0; i < EdgeCount; i++ )
 			{
 				int from = _edges[i * 2], to = _edges[i * 2 + 1];
 
-				_quikGraphBuilder.AddVerticesAndEdge(new Edge<int>(from, to));
-				_quikGraphBuilder.AddVerticesAndEdge(new Edge<int>(to, from));
+				_quikGraphBuilder.AddEdge(new Edge<int>(from, to));
+				_quikGraphBuilder.AddEdge(new Edge<int>(to, from));
 			}
 		}
 
 		[Benchmark(Baseline = true)]
 		[MaxIterationCount(25)]
-		public void GraphsNET_AddArcAndVertices ()
+		public void GraphsNET_AddEdgeAndVertices ()
 		{
 			_graphBuilder = new(VertexCapacity, EdgeCount*2);
 			for ( int i = 0; i < EdgeCount; i++ )

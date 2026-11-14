@@ -1,12 +1,4 @@
-﻿// -----------------------------------------------------------------------
-// Copyright (c) Microsoft Corporation.  All rights reserved.
-// -----------------------------------------------------------------------
-
-using BenchmarkDotNet.Reports;
-using BenchmarkDotNet.Running;
-using Benchmarks.Algorithms;
-using Benchmarks.Building;
-using Benchmarks.Experimental;
+﻿using BenchmarkDotNet.Running;
 
 namespace GraphBenchmarks
 {
@@ -14,7 +6,7 @@ namespace GraphBenchmarks
 	{
 		static void Main ()
 		{
-			
+			BenchmarkRunner.Run(typeof(Program).Assembly);
 		}
 	}
 }
