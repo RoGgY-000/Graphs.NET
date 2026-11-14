@@ -43,8 +43,8 @@ namespace Benchmarks.Building
 
 				_graphBuilder.AddArcAndVertices(from, to);
 			}
-			Console.WriteLine(_graphBuilder.EdgeCapacity);
-			Console.WriteLine(_graphBuilder.EdgeCount);
+			Console.WriteLine(_graphBuilder.ArcCapacity);
+			Console.WriteLine(_graphBuilder.ArcCount);
 			Console.WriteLine(_graphBuilder.VertexCapacity);
 			Console.WriteLine(_graphBuilder.VertexCount);
 		}

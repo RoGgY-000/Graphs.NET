@@ -186,19 +186,20 @@ namespace Graphs.NET.Algorithms
 			}
 
 			int stackEnd = 0;
-			int[] vertexStack = ArrayPool<int>.Shared.Rent(g.VertexCount);
-			int[] neighborStack = ArrayPool<int>.Shared.Rent(g.VertexCount);
+			int[] vertexStack = ArrayPool<int>.Shared.Rent(g._maxVertexIndex + 1);
+			int[] neighborStack = ArrayPool<int>.Shared.Rent(g._maxVertexIndex + 1);
 
-			int TwoBitArrayLength = TwoBitArraySpan.GetRequiredLengthFor(g.VertexCount);
+			int TwoBitArrayLength = TwoBitArraySpan.GetRequiredLengthFor(g._maxVertexIndex + 1);
 			int[] visitedArray = ArrayPool<int>.Shared.Rent(TwoBitArrayLength);
 			visitedArray.AsSpan(0, TwoBitArrayLength).Clear();
 			TwoBitArraySpan visited = new(visitedArray.AsSpan());
 
 			try
 			{
-				for ( int vertex = 0; vertex < g.VertexCount; vertex++ )
+				for ( int vertex = 0; vertex <= g._maxVertexIndex; vertex++ )
 				{
-					if ( visited[vertex] == 0 )
+					if ( g._activeVertices[vertex] == 1
+						&& visited[vertex] == 0 )
 					{
 						vertexStack[stackEnd] = vertex;
 						neighborStack[stackEnd] = 0;

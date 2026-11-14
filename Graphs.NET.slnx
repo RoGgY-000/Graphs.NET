@@ -6,6 +6,7 @@
     <Project Path="Graphs.NET/Graphs.NET.csproj" />
   </Folder>
   <Folder Name="/Tests/">
+    <File Path="global.json" />
     <Project Path="Tests/Tests.csproj" />
   </Folder>
   <Folder Name="/Analyzers/">

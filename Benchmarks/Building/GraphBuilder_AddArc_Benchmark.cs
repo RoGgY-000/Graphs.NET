@@ -7,25 +7,20 @@ using QuikGraph;
 
 namespace Benchmarks.Building
 {
-	[CPUUsageDiagnoser]
 	[MemoryDiagnoser]
 	[Orderer(BenchmarkDotNet.Order.SummaryOrderPolicy.FastestToSlowest)]
 	[RankColumn]
 	[HideColumns("Job", "RatioSD", "Error", "StdDev", "Median")]
-	public class GraphAdditionEdgesBenchmark
+	public abstract class GraphBuilder_AddArc_Benchmark
 	{
-		[Params(1_000)]
-		public int VertexCount;
-		[Params(1_000)]
-		public int ArcCount;
+		public virtual int VertexCapacity { get; set; }
+		public virtual int ArcCount { get; set; }
 
 		private int[] _arcs;
 
 		private GraphBuilder _graphBuilder;
-		private Graph _graph;
 		private Dictionary<int, List<int>> _naiveGraph;
 		private AdjacencyGraph<int, Edge<int>> _quikGraphBuilder;
-		private CompressedSparseRowGraph<int> _quikGraph;
 
 		[GlobalSetup]
 		public void Setup ()
@@ -36,16 +31,17 @@ namespace Benchmarks.Building
 
 			for ( int i = 0; i < ArcCount; i++ )
 			{
-				int from = random.Next(VertexCount), to = random.Next(VertexCount);
+				int from = random.Next(VertexCapacity), to = random.Next(VertexCapacity);
 				_arcs[i * 2] = from;
 				_arcs[i * 2 + 1] = to;
 			}
 		}
 
 		[Benchmark]
-		public void Naive_EdgesAddition ()
+		[MaxIterationCount(25)]
+		public void Naive_AddArcs ()
 		{
-			_naiveGraph = new(VertexCount);
+			_naiveGraph = new(VertexCapacity);
 			for ( int i = 0; i < ArcCount; i++ )
 			{
 				int from = _arcs[i * 2], to = _arcs[i * 2 + 1];
@@ -54,15 +50,20 @@ namespace Benchmarks.Building
 				{
 					_naiveGraph.Add(from, []);
 				}
+				if ( !_naiveGraph.ContainsKey(to) )
+				{
+					_naiveGraph.Add(to, []);
+				}
 
 				_naiveGraph[from].Add(to);
 			}
 		}
 
 		[Benchmark]
-		public void QuikGraph_EdgesAddition ()
+		[MaxIterationCount(25)]
+		public void QuikGraph_AddVerticesAndEdge ()
 		{
-			_quikGraphBuilder = new(true, VertexCount, ArcCount);
+			_quikGraphBuilder = new(true, VertexCapacity, ArcCount);
 			for ( int i = 0; i < ArcCount; i++ )
 			{
 				int from = _arcs[i * 2], to = _arcs[i * 2 + 1];
@@ -72,9 +73,10 @@ namespace Benchmarks.Building
 		}
 
 		[Benchmark(Baseline = true)]
-		public void GraphsNET_EdgesAddition ()
+		[MaxIterationCount(25)]
+		public void GraphsNET_AddArcAndVertices ()
 		{
-			_graphBuilder = new(VertexCount, ArcCount);
+			_graphBuilder = new(VertexCapacity, ArcCount);
 			for ( int i = 0; i < ArcCount; i++ )
 			{
 				int from = _arcs[i * 2], to = _arcs[i * 2 + 1];
@@ -82,5 +84,21 @@ namespace Benchmarks.Building
 				_graphBuilder.AddArcAndVertices(from, to);
 			}
 		}
+	}
+
+	public class Small_GraphBuilder_AddArc_Benchmark : GraphBuilder_AddArc_Benchmark
+	{
+		[Params(1, 10, 100)]
+		public override int VertexCapacity { get; set; }
+		[Params(1, 10, 100)]
+		public override int ArcCount { get; set; }
+	}
+
+	public class Medium_GraphBuilder_AddArc_Benchmark : GraphBuilder_AddArc_Benchmark
+	{
+		[Params(1_000, 10_000, 50_000)]
+		public override int VertexCapacity { get; set; }
+		[Params(1_000, 10_000, 50_000)]
+		public override int ArcCount { get; set; }
 	}
 }

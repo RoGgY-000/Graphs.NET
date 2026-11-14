@@ -16,9 +16,9 @@ namespace Benchmarks.Algorithms
 	[RankColumn]
 	public class ContainCycleAlgorithmBenchmark
 	{
-		[Params(10_000)]
+		[Params(10)]
 		public int VertexCount;
-		[Params(1_000_000)]
+		[Params(10)]
 		public int ArcCount;
 
 		private GraphBuilder _graphBuilder;
@@ -36,11 +36,6 @@ namespace Benchmarks.Algorithms
 			_naiveGraph = new Dictionary<int, List<int>>(VertexCount);
 			_quikGraphBuilder = new AdjacencyGraph<int, Edge<int>>(true);
 
-			for ( int i = 0; i < VertexCount; i++ )
-			{
-				_quikGraphBuilder.AddVertex(i);
-			}
-
 			for ( int i = 0; i < ArcCount; i++ )
 			{
 				int from = random.Next(0, VertexCount), to = random.Next(0, VertexCount);
@@ -55,7 +50,7 @@ namespace Benchmarks.Algorithms
 
 				value.Add(to);
 
-				_quikGraphBuilder.AddEdge(new Edge<int>(from, to));
+				_quikGraphBuilder.AddVerticesAndEdge(new Edge<int>(from, to));
 			}
 			_graph = _graphBuilder.Build();
 			_quikGraph = _quikGraphBuilder.ToCompressedRowGraph();

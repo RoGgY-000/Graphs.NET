@@ -37,6 +37,7 @@ namespace Graphs.NET.Additional
 			else if ( array.Length < newCapacity )
 			{
 				OneBitArray newArray = new(newCapacity);
+				array.CopyTo(newArray);
 				array = newArray;
 			}
 		}

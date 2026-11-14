@@ -1,11 +1,11 @@
 ﻿using Graphs.NET.Core;
+using Tests.Extensions;
 
 namespace Tests.Data
 {
-	public class GraphTestData
+	public static class GraphTestData
 	{
-
-		public static IEnumerable<object[]> GetGraphsAndExpectedWithoutWeightsAndData ()
+		public static IEnumerable<object[]> GetGraphsAndExpected ()
 		{
 			// 1) empty graph
 			{
@@ -20,7 +20,7 @@ namespace Tests.Data
 						DuplicateArcCount = 0,
 						ReflexiveArcsCount = 0,
 						IsAcyclic = true,
-						Neighbors = []
+						VerticesAndArcs = []
 					}
 				};
 			}
@@ -39,7 +39,10 @@ namespace Tests.Data
 						DuplicateArcCount = 0,
 						ReflexiveArcsCount = 0,
 						IsAcyclic = true,
-						Neighbors = [[]]
+						VerticesAndArcs = new()
+						{
+							{ 0, [] }
+						}
 					}
 				};
 			}
@@ -58,7 +61,10 @@ namespace Tests.Data
 						DuplicateArcCount = 0,
 						ReflexiveArcsCount = 1,
 						IsAcyclic = false,
-						Neighbors = [[0]]
+						VerticesAndArcs = new()
+						{
+							{ 0, [0] }
+						}
 					}
 				};
 			}
@@ -78,7 +84,10 @@ namespace Tests.Data
 						DuplicateArcCount = 1,
 						ReflexiveArcsCount = 2,
 						IsAcyclic = false,
-						Neighbors = [[0, 0]]
+						VerticesAndArcs = new()
+						{
+							{ 0, [0, 0] }
+						}
 					}
 				};
 			}
@@ -97,7 +106,11 @@ namespace Tests.Data
 						DuplicateArcCount = 0,
 						ReflexiveArcsCount = 0,
 						IsAcyclic = true,
-						Neighbors = [[], []]
+						VerticesAndArcs = new()
+						{
+							{ 0, [] },
+							{ 1, [] }
+						}
 					}
 				};
 			}
@@ -117,7 +130,11 @@ namespace Tests.Data
 						DuplicateArcCount = 0,
 						ReflexiveArcsCount = 1,
 						IsAcyclic = false,
-						Neighbors = [[], [1]]
+						VerticesAndArcs = new()
+						{
+							{ 0, [] },
+							{ 1, [1] }
+						}
 					}
 				};
 			}
@@ -137,7 +154,11 @@ namespace Tests.Data
 						DuplicateArcCount = 0,
 						ReflexiveArcsCount = 2,
 						IsAcyclic = false,
-						Neighbors = [[0], [1]]
+						VerticesAndArcs = new()
+						{
+							{ 0, [0] },
+							{ 1, [1] }
+						}
 					}
 				};
 			}
@@ -158,7 +179,11 @@ namespace Tests.Data
 						DuplicateArcCount = 1,
 						ReflexiveArcsCount = 3,
 						IsAcyclic = false,
-						Neighbors = [[0, 0], [1]]
+						VerticesAndArcs = new()
+						{
+							{ 0, [0, 0] },
+							{ 1, [1] }
+						}
 					}
 				};
 			}
@@ -177,7 +202,11 @@ namespace Tests.Data
 						DuplicateArcCount = 0,
 						ReflexiveArcsCount = 0,
 						IsAcyclic = true,
-						Neighbors = [[1], []]
+						VerticesAndArcs = new()
+						{
+							{ 0, [1] },
+							{ 1, [] }
+						}
 					}
 				};
 			}
@@ -197,7 +226,11 @@ namespace Tests.Data
 						DuplicateArcCount = 0,
 						ReflexiveArcsCount = 0,
 						IsAcyclic = false,
-						Neighbors = [[1], [0]]
+						VerticesAndArcs = new()
+						{
+							{ 0, [1] },
+							{ 1, [0] }
+						}
 					}
 				};
 			}
@@ -218,7 +251,11 @@ namespace Tests.Data
 						DuplicateArcCount = 1,
 						ReflexiveArcsCount = 0,
 						IsAcyclic = false,
-						Neighbors = [[1, 1], [0]]
+						VerticesAndArcs = new()
+						{
+							{ 0, [1, 1] },
+							{ 1, [0] }
+						}
 					}
 				};
 			}
@@ -240,7 +277,11 @@ namespace Tests.Data
 						DuplicateArcCount = 2,
 						ReflexiveArcsCount = 0,
 						IsAcyclic = false,
-						Neighbors = [[1, 1], [0, 0]]
+						VerticesAndArcs = new()
+						{
+							{ 0, [1, 1] },
+							{ 1, [0, 0] }
+						}
 					}
 				};
 			}
@@ -260,7 +301,11 @@ namespace Tests.Data
 						DuplicateArcCount = 0,
 						ReflexiveArcsCount = 1,
 						IsAcyclic = false,
-						Neighbors = [[1], [1]]
+						VerticesAndArcs = new()
+						{
+							{ 0, [1] },
+							{ 1, [1] }
+						}
 					}
 				};
 			}
@@ -282,7 +327,11 @@ namespace Tests.Data
 						DuplicateArcCount = 0,
 						ReflexiveArcsCount = 2,
 						IsAcyclic = false,
-						Neighbors = [[0, 1], [0, 1]]
+						VerticesAndArcs = new()
+						{
+							{ 0, [0, 1] },
+							{ 1, [0, 1] }
+						}
 					}
 				};
 			}
@@ -304,7 +353,11 @@ namespace Tests.Data
 						DuplicateArcCount = 4,
 						ReflexiveArcsCount = 4,
 						IsAcyclic = false,
-						Neighbors = [[0, 0, 1, 1], [0, 0, 1, 1]]
+						VerticesAndArcs = new()
+						{
+							{ 0, [0, 0, 1, 1] },
+							{ 1, [0, 0, 1, 1] }
+						}
 					}
 				};
 			}
@@ -337,22 +390,129 @@ namespace Tests.Data
 						DuplicateArcCount = 0,
 						ReflexiveArcsCount = 2,
 						IsAcyclic = false,
-						Neighbors = [[1, 2], [], [1, 2, 3, 4], [3], [0, 3]]
+						VerticesAndArcs = new()
+						{
+							{ 0, [1, 2] },
+							{ 1, [] },
+							{ 2, [1, 2, 3, 4] },
+							{ 3, [3] },
+							{ 4, [0, 3] }
+						}
 					}
 				};
 			}
+		}
+
+		public static IEnumerable<object[]> GetRandomGraphsAndExpected ()
+		{
+			// 17)
+			yield return GenerateRandomGraphAndExpected(1, 1);
+			// 18)
+			yield return GenerateRandomGraphAndExpected(1, 10);
+			// 19)
+			yield return GenerateRandomGraphAndExpected(1, 100);
+			// 20)
+			yield return GenerateRandomGraphAndExpected(1, 1_000);
+			// 21)
+			yield return GenerateRandomGraphAndExpected(10, 1);
+			// 22)
+			yield return GenerateRandomGraphAndExpected(10, 10);
+			// 23)
+			yield return GenerateRandomGraphAndExpected(10, 100);
+			// 24)
+			yield return GenerateRandomGraphAndExpected(10, 1_000);
+			// 25)
+			yield return GenerateRandomGraphAndExpected(100, 1);
+			// 26)
+			yield return GenerateRandomGraphAndExpected(100, 10);
+			// 27)
+			yield return GenerateRandomGraphAndExpected(100, 100);
+			// 28)
+			yield return GenerateRandomGraphAndExpected(100, 1_000);
+			// 29)
+			yield return GenerateRandomGraphAndExpected(1_000, 1);
+			// 30)
+			yield return GenerateRandomGraphAndExpected(1_000, 10);
+			// 31)
+			yield return GenerateRandomGraphAndExpected(1_000, 100);
+			// 32)
+			yield return GenerateRandomGraphAndExpected(1_000, 1_000);
+		}
+
+		private static object[] GenerateRandomGraphAndExpected (int arcCount, int vertexCount)
+		{
+			GraphBuilder builder = new();
+			Dictionary<int, List<int>> naive = new(vertexCount);
+			Random r = new(42);
+
+			int reflexive = 0, duplicate = 0;
+
+			for ( int i = 0; i < arcCount; i++ )
+			{
+				int from = r.Next(0, vertexCount), to = r.Next(0, vertexCount);
+
+				if ( from == to )
+				{
+					reflexive++;
+				}
+
+				builder.AddArcAndVertices(from, to);
+
+				if ( naive.TryGetValue(from, out List<int> value) )
+				{
+					if ( value.Contains(to) )
+					{
+						duplicate++;
+					}
+				}
+				else
+				{
+					value = [];
+					naive.Add(from, value);
+				}
+
+				if ( !naive.ContainsKey(to) )
+				{
+					naive.Add(to, []);
+				}
+
+				value.Add(to);
+			}
+
+			Dictionary<int, int[]> VertivesAndArcs = new();
+			foreach ( int vertex in naive.Keys )
+			{
+				int[] arr = naive[vertex].ToArray();
+				arr.Sort();
+				VertivesAndArcs.Add(vertex, arr);
+			}
+
+			return
+			[
+				builder.Build(),
+				new ExpectedGraph
+				{
+					ArcCount = arcCount,
+					VertexCount = naive.Count,
+					AverageVertexDegree = 2f * arcCount / naive.Count,
+					DuplicateArcCount = duplicate,
+					ReflexiveArcsCount = reflexive,
+					IsAcyclic = !NaiveGraphExtensions.RunNaiveCycleDetection(naive, naive.Count),
+					VerticesAndArcs = VertivesAndArcs
+				}
+			];
 		}
 	}
 
 	public class ExpectedGraph
 	{
-		public int VertexCount { get; set; }
 		public int ArcCount { get; set; }
+		public int VertexCount { get; set; }
 		public float AverageVertexDegree { get; set; }
 		public int DuplicateArcCount { get; set; }
-		public int ReflexiveArcsCount { get; set; }
 		public bool IsAcyclic { get; set; }
-		public int[][] Neighbors { get; set; }
+		public int ReflexiveArcsCount { get; set; }
+		public Dictionary<int, int[]> VerticesAndArcs { get; set; }
 	}
 
 	public class ExpectedGraphWithWeights : ExpectedGraph
