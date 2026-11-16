@@ -8,9 +8,9 @@ using QuikGraph.Algorithms;
 namespace Benchmarks.QuikGraph
 {
 	[CPUUsageDiagnoser]
-	[MemoryDiagnoser]
-	[Orderer(BenchmarkDotNet.Order.SummaryOrderPolicy.FastestToSlowest)]
-	[RankColumn]
+	
+	
+	
 	public class FastestQuikGraphTopologicalSortBenchmark
 	{
 		[Params(100)]

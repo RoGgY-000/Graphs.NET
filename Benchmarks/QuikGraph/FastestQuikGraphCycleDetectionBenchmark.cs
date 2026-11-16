@@ -6,16 +6,12 @@ using QuikGraph.Algorithms;
 
 namespace Benchmarks.QuikGraph
 {
-	[CPUUsageDiagnoser]
-	[MemoryDiagnoser]
-	[Orderer(BenchmarkDotNet.Order.SummaryOrderPolicy.FastestToSlowest)]
-	[RankColumn]
 	public class FastestQuikGraphCycleDetectionBenchmark
 	{
-		[Params(100)]
+		[Params(1_000, 5_000, 10_000)]
 		public int VertexCount;
 
-		[Params(10, 100, 1_000)]
+		[Params(1_000, 5_000, 10_000)]
 		public int ArcCount;
 
 		private AdjacencyGraph<int, Edge<int>> adjacencyGraph;
@@ -56,7 +52,7 @@ namespace Benchmarks.QuikGraph
 			return !arrayAdjacencyGraph.IsDirectedAcyclicGraph();
 		}
 
-		[Benchmark(Baseline = true)]
+		[Benchmark]
 		public bool CompressedSparseRowGraph_ContainCycle ()
 		{
 			return !compressedSparseRowGraph.IsDirectedAcyclicGraph();

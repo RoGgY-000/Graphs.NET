@@ -1,26 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using BenchmarkDotNet.Attributes;
 using Graphs.NET.Core;
 using QuikGraph;
 
 namespace Benchmarks.Building
 {
-	[MemoryDiagnoser]
-	[Orderer(BenchmarkDotNet.Order.SummaryOrderPolicy.FastestToSlowest)]
-	[RankColumn]
-	[HideColumns("Job", "RatioSD", "Error", "StdDev", "Median")]
-	public abstract class GraphBuilder_AddEdge_Benchmark
+	public abstract class GraphBuilder_AddEdge
 	{
 		public virtual int VertexCapacity { get; set; }
 		public virtual int EdgeCount { get; set; }
 
-		private int[] _edges;
+		protected int[] _edges;
 
-		private GraphBuilder _graphBuilder;
-		private Dictionary<int, List<int>> _naiveGraph;
-		private UndirectedGraph<int, Edge<int>> _quikGraphBuilder;
+		protected GraphBuilder _graphBuilder;
+		protected Dictionary<int, List<int>> _naiveGraph;
+		protected UndirectedGraph<int, Edge<int>> _quikGraphBuilder;
 
 		[GlobalSetup]
 		public void Setup ()
@@ -38,8 +33,7 @@ namespace Benchmarks.Building
 		}
 
 		[Benchmark]
-		[MaxIterationCount(25)]
-		public void Naive_AddEdge ()
+		public void Naive_Add ()
 		{
 			_naiveGraph = new(VertexCapacity);
 			for ( int i = 0; i < EdgeCount; i++ )
@@ -60,22 +54,7 @@ namespace Benchmarks.Building
 			}
 		}
 
-		[Benchmark]
-		[MaxIterationCount(25)]
-		public void QuikGraph_AddVerticesAndEdge ()
-		{
-			_quikGraphBuilder = new();
-			for ( int i = 0; i < EdgeCount; i++ )
-			{
-				int from = _edges[i * 2], to = _edges[i * 2 + 1];
-
-				_quikGraphBuilder.AddEdge(new Edge<int>(from, to));
-				_quikGraphBuilder.AddEdge(new Edge<int>(to, from));
-			}
-		}
-
 		[Benchmark(Baseline = true)]
-		[MaxIterationCount(25)]
 		public void GraphsNET_AddEdgeAndVertices ()
 		{
 			_graphBuilder = new(VertexCapacity, EdgeCount*2);
@@ -88,7 +67,22 @@ namespace Benchmarks.Building
 		}
 	}
 
-	public class Small_GraphBuilder_AddEdge_Benchmark : GraphBuilder_AddEdge_Benchmark
+	public abstract class GraphBuilder_AddEdge_WithQuikGraph : GraphBuilder_AddEdge
+	{
+		[Benchmark]
+		public void QuikGraph_AddVerticesAndEdge ()
+		{
+			_quikGraphBuilder = new(true);
+			for ( int i = 0; i < EdgeCount; i++ )
+			{
+				int from = _edges[i * 2], to = _edges[i * 2 + 1];
+
+				_quikGraphBuilder.AddVerticesAndEdge(new Edge<int>(from, to));
+			}
+		}
+	}
+
+	public class Small_GraphBuilder_AddEdge : GraphBuilder_AddEdge_WithQuikGraph
 	{
 		[Params(1, 10, 100)]
 		public override int VertexCapacity { get; set; }
@@ -96,11 +90,19 @@ namespace Benchmarks.Building
 		public override int EdgeCount { get; set; }
 	}
 
-	public class Medium_GraphBuilder_AddEdge_Benchmark : GraphBuilder_AddEdge_Benchmark
+	public class Medium_GraphBuilder_AddEdge : GraphBuilder_AddEdge_WithQuikGraph
 	{
-		[Params(1_000, 10_000, 50_000)]
+		[Params(1_000, 5_000, 10_000)]
 		public override int VertexCapacity { get; set; }
-		[Params(1_000, 10_000, 50_000)]
+		[Params(1_000, 5_000, 10_000)]
+		public override int EdgeCount { get; set; }
+	}
+
+	public class Large_GraphBuilder_AddEdge : GraphBuilder_AddEdge
+	{
+		[Params(50_000, 100_000, 500_000)]
+		public override int VertexCapacity { get; set; }
+		[Params(50_000, 100_000, 500_000)]
 		public override int EdgeCount { get; set; }
 	}
 }

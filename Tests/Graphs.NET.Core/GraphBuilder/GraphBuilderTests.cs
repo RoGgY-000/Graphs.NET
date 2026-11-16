@@ -8,7 +8,7 @@ namespace Tests.Graphs.NET.Core
 		[Theory]
 		[MemberData(nameof(GraphBuilderTestData.GetGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
 		[MemberData(nameof(GraphBuilderTestData.GetRandomGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
-		public void ArcCapacityTests (GraphBuilder builder, ExpectedGraphBuilder expected)
+		public void ArcCapacity (GraphBuilder builder, ExpectedGraphBuilder expected)
 		{
 			Assert.Equal(expected.ArcCapacity, builder.ArcCapacity);
 		}
@@ -16,7 +16,7 @@ namespace Tests.Graphs.NET.Core
 		[Theory]
 		[MemberData(nameof(GraphBuilderTestData.GetGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
 		[MemberData(nameof(GraphBuilderTestData.GetRandomGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
-		public void ArcCountTests (GraphBuilder builder, ExpectedGraphBuilder expected)
+		public void ArcCount (GraphBuilder builder, ExpectedGraphBuilder expected)
 		{
 			Assert.Equal(expected.ArcCount, builder.ArcCount);
 		}
@@ -24,7 +24,7 @@ namespace Tests.Graphs.NET.Core
 		[Theory]
 		[MemberData(nameof(GraphBuilderTestData.GetGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
 		[MemberData(nameof(GraphBuilderTestData.GetRandomGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
-		public void VertexCapacityTests (GraphBuilder builder, ExpectedGraphBuilder expected)
+		public void VertexCapacity (GraphBuilder builder, ExpectedGraphBuilder expected)
 		{
 			Assert.Equal(expected.VertexCapacity, builder.VertexCapacity);
 		}
@@ -32,7 +32,7 @@ namespace Tests.Graphs.NET.Core
 		[Theory]
 		[MemberData(nameof(GraphBuilderTestData.GetGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
 		[MemberData(nameof(GraphBuilderTestData.GetRandomGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
-		public void VertexCountTests (GraphBuilder builder, ExpectedGraphBuilder expected)
+		public void VertexCount (GraphBuilder builder, ExpectedGraphBuilder expected)
 		{
 			Assert.Equal(expected.VertexCount, builder.VertexCount);
 		}
@@ -40,7 +40,7 @@ namespace Tests.Graphs.NET.Core
 		[Theory]
 		[MemberData(nameof(GraphBuilderTestData.GetGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
 		[MemberData(nameof(GraphBuilderTestData.GetRandomGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
-		public void AddArcTests (GraphBuilder builder, ExpectedGraphBuilder expected)
+		public void AddArc (GraphBuilder builder, ExpectedGraphBuilder expected)
 		{
 			int[] expectedVertices = expected.VerticesAndArcs.Keys.ToArray();
 
@@ -65,7 +65,7 @@ namespace Tests.Graphs.NET.Core
 		[Theory]
 		[MemberData(nameof(GraphBuilderTestData.GetGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
 		[MemberData(nameof(GraphBuilderTestData.GetRandomGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
-		public void AddArcAndVerticesTests (GraphBuilder builder, ExpectedGraphBuilder expected)
+		public void AddArcAndVertices (GraphBuilder builder, ExpectedGraphBuilder expected)
 		{
 			int[] expectedVertices = expected.VerticesAndArcs.Keys.ToArray();
 			int firstNewVertex = expectedVertices.Length > 0 ? expectedVertices.Max() + 1 : 0;
@@ -84,7 +84,7 @@ namespace Tests.Graphs.NET.Core
 		[Theory]
 		[MemberData(nameof(GraphBuilderTestData.GetGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
 		[MemberData(nameof(GraphBuilderTestData.GetRandomGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
-		public void AddEdgeTests (GraphBuilder builder, ExpectedGraphBuilder expected)
+		public void AddEdge (GraphBuilder builder, ExpectedGraphBuilder expected)
 		{
 			int[] expectedVertices = expected.VerticesAndArcs.Keys.ToArray();
 
@@ -101,6 +101,7 @@ namespace Tests.Graphs.NET.Core
 					{
 						builder.AddEdge(vertex, other);
 						Assert.True(builder.HasArc(vertex, other));
+						Assert.True(builder.HasArc(other, vertex));
 					}
 				}
 			}
@@ -109,7 +110,7 @@ namespace Tests.Graphs.NET.Core
 		[Theory]
 		[MemberData(nameof(GraphBuilderTestData.GetGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
 		[MemberData(nameof(GraphBuilderTestData.GetRandomGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
-		public void AddEdgeAndVerticesTests (GraphBuilder builder, ExpectedGraphBuilder expected)
+		public void AddEdgeAndVertices (GraphBuilder builder, ExpectedGraphBuilder expected)
 		{
 			int[] expectedVertices = expected.VerticesAndArcs.Keys.ToArray();
 			int firstNewVertex = expectedVertices.Length > 0 ? expectedVertices.Max() + 1 : 0;
@@ -129,7 +130,7 @@ namespace Tests.Graphs.NET.Core
 		[Theory]
 		[MemberData(nameof(GraphBuilderTestData.GetGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
 		[MemberData(nameof(GraphBuilderTestData.GetRandomGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
-		public void AddVertexTests (GraphBuilder builder, ExpectedGraphBuilder expected)
+		public void AddVertex (GraphBuilder builder, ExpectedGraphBuilder expected)
 		{
 			int[] expectedVertices = expected.VerticesAndArcs.Keys.ToArray();
 			int maxVertex = expectedVertices.Length > 0 ? expectedVertices.Max() : 0;
@@ -151,7 +152,7 @@ namespace Tests.Graphs.NET.Core
 		[Theory]
 		[MemberData(nameof(GraphBuilderTestData.GetGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
 		[MemberData(nameof(GraphBuilderTestData.GetRandomGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
-		public void AddVerticesTests (GraphBuilder builder, ExpectedGraphBuilder expected)
+		public void AddVertices (GraphBuilder builder, ExpectedGraphBuilder expected)
 		{
 			int[] expectedVertices = expected.VerticesAndArcs.Keys.ToArray();
 
@@ -179,7 +180,7 @@ namespace Tests.Graphs.NET.Core
 		[Theory]
 		[MemberData(nameof(GraphBuilderTestData.GetGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
 		[MemberData(nameof(GraphBuilderTestData.GetRandomGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
-		public void HasArcTests (GraphBuilder builder, ExpectedGraphBuilder expected)
+		public void HasArc (GraphBuilder builder, ExpectedGraphBuilder expected)
 		{
 			int[] expectedVertices = expected.VerticesAndArcs.Keys.ToArray();
 
@@ -195,7 +196,7 @@ namespace Tests.Graphs.NET.Core
 		[Theory]
 		[MemberData(nameof(GraphBuilderTestData.GetGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
 		[MemberData(nameof(GraphBuilderTestData.GetRandomGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
-		public void HasVertexTests (GraphBuilder builder, ExpectedGraphBuilder expected)
+		public void HasVertex (GraphBuilder builder, ExpectedGraphBuilder expected)
 		{
 			int[] expectedVertices = expected.VerticesAndArcs.Keys.ToArray();
 
@@ -208,7 +209,7 @@ namespace Tests.Graphs.NET.Core
 		[Theory]
 		[MemberData(nameof(GraphBuilderTestData.GetGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
 		[MemberData(nameof(GraphBuilderTestData.GetRandomGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
-		public void RemoveArcTests (GraphBuilder builder, ExpectedGraphBuilder expected)
+		public void RemoveArc (GraphBuilder builder, ExpectedGraphBuilder expected)
 		{
 			int[] vertices = expected.VerticesAndArcs.Keys.ToArray();
 
@@ -254,7 +255,7 @@ namespace Tests.Graphs.NET.Core
 		[Theory]
 		[MemberData(nameof(GraphBuilderTestData.GetGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
 		[MemberData(nameof(GraphBuilderTestData.GetRandomGraphBuildersAndExpected), MemberType = typeof(GraphBuilderTestData))]
-		public void RemoveVertexTests (GraphBuilder builder, ExpectedGraphBuilder expected)
+		public void RemoveVertex (GraphBuilder builder, ExpectedGraphBuilder expected)
 		{
 			int[] vertices = expected.VerticesAndArcs.Keys.ToArray();
 

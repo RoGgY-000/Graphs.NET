@@ -143,11 +143,13 @@ namespace Graphs.NET.Core
 
 			EnsureVertexCapacityOrResize(maxVertex + 1);
 
-			for ( int i = 0; i < vertices.Length; i++ )
+			for ( int vertexIndex = 0; vertexIndex < vertices.Length; vertexIndex++ )
 			{
-				if ( _activeVertices[i] == 0 )
+				int vertex = vertices[vertexIndex];
+
+				if ( _activeVertices[vertex] == 0 )
 				{
-					_activeVertices[i] = 1;
+					_activeVertices[vertex] = 1;
 					VertexCount++;
 				}
 			}
@@ -434,7 +436,7 @@ namespace Graphs.NET.Core
 		protected TEdgeWeight[] _weights;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public GraphBuilder (int vertexCapacity = 0, int edgeCapacity = 0) : base(vertexCapacity, edgeCapacity)
+		public GraphBuilder (int vertexCapacity = 0, int arcCapacity = 0) : base(vertexCapacity, arcCapacity)
 		{
 
 		}
@@ -442,11 +444,6 @@ namespace Graphs.NET.Core
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void AddArc (int from, int to, TEdgeWeight weight)
 		{
-			if ( !typeof(TEdgeWeight).IsValueType )
-			{
-				ArgumentNullException.ThrowIfNull(weight);
-			}
-
 			ArgumentOutOfRangeException.ThrowIfNegative(from);
 			ArgumentOutOfRangeException.ThrowIfNegative(to);
 			
@@ -466,11 +463,6 @@ namespace Graphs.NET.Core
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void AddArcAndVertices (int from, int to, TEdgeWeight weight)
 		{
-			if ( !typeof(TEdgeWeight).IsValueType )
-			{
-				ArgumentNullException.ThrowIfNull(weight);
-			}
-
 			ArgumentOutOfRangeException.ThrowIfNegative(from);
 			ArgumentOutOfRangeException.ThrowIfNegative(to);
 
@@ -494,11 +486,6 @@ namespace Graphs.NET.Core
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void AddEdge (int v1, int v2, TEdgeWeight weight)
 		{
-			if ( !typeof(TEdgeWeight).IsValueType )
-			{
-				ArgumentNullException.ThrowIfNull(weight);
-			}
-
 			ArgumentOutOfRangeException.ThrowIfNegative(v1);
 			ArgumentOutOfRangeException.ThrowIfNegative(v2);
 
@@ -512,22 +499,13 @@ namespace Graphs.NET.Core
 
 			EnsureArcCapacityOrResize(ArcCount + 2);
 
-			if ( v1 != v2 )
-			{
-				InsertArc(v2, v1, weight);
-			}
-
 			InsertArc(v1, v2, weight);
+			InsertArc(v2, v1, weight);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void AddEdgeAndVertices (int v1, int v2, TEdgeWeight weight)
 		{
-			if ( !typeof(TEdgeWeight).IsValueType )
-			{
-				ArgumentNullException.ThrowIfNull(weight);
-			}
-
 			ArgumentOutOfRangeException.ThrowIfNegative(v1);
 			ArgumentOutOfRangeException.ThrowIfNegative(v2);
 
@@ -676,18 +654,13 @@ namespace Graphs.NET.Core
 	{
 		private TVertexData[] _data;
 
-		public GraphBuilder (int vertexCapacity = 0, int edgeCapacity = 0) : base(vertexCapacity, edgeCapacity)
+		public GraphBuilder (int vertexCapacity = 0, int arcCapacity = 0) : base(vertexCapacity, arcCapacity)
 		{
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void AddVertex (int vertex, TVertexData data)
 		{
-			if ( !typeof(TVertexData).IsValueType )
-			{
-				ArgumentNullException.ThrowIfNull(data);
-			}
-
 			ArgumentOutOfRangeException.ThrowIfNegative(vertex);
 
 			EnsureVertexCapacityOrResize(vertex + 1);
@@ -705,11 +678,6 @@ namespace Graphs.NET.Core
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetVertexData (int vertex, TVertexData data)
 		{
-			if ( !typeof(TVertexData).IsValueType )
-			{
-				ArgumentNullException.ThrowIfNull(data);
-			}
-
 			ArgumentOutOfRangeException.ThrowIfNegative(vertex);
 			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(vertex, VertexCapacity);
 

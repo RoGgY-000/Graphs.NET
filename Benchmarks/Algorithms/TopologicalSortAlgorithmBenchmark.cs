@@ -11,9 +11,9 @@ using QuikGraph.Algorithms;
 namespace Benchmarks.Algorithms
 {
 	[CPUUsageDiagnoser]
-	[MemoryDiagnoser]
-	[Orderer(BenchmarkDotNet.Order.SummaryOrderPolicy.FastestToSlowest)]
-	[RankColumn]
+	
+	
+	
 	public class TopologicalSortAlgorithmBenchmark
 	{
 		[Params(1)]

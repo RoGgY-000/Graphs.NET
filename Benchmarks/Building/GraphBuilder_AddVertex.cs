@@ -7,11 +7,11 @@ using QuikGraph;
 
 namespace Benchmarks.Building
 {
-	[MemoryDiagnoser]
-	[Orderer(BenchmarkDotNet.Order.SummaryOrderPolicy.FastestToSlowest)]
-	[RankColumn]
-	[HideColumns("Job", "RatioSD", "Error", "StdDev", "Median")]
-	public abstract class GraphBuilder_AddVertex_Benchmark
+	
+	
+	
+	
+	public abstract class GraphBuilder_AddVertex
 	{
 		public virtual int VertexCount { get; set; }
 
@@ -36,8 +36,8 @@ namespace Benchmarks.Building
 		}
 
 		[Benchmark]
-		[MaxIterationCount(25)]
-		public void Naive_AddVertices ()
+		
+		public void Naive_Add ()
 		{
 			_naiveGraph = new(VertexCount);
 			for ( int i = 0; i < VertexCount; i++ )
@@ -52,7 +52,7 @@ namespace Benchmarks.Building
 		}
 
 		[Benchmark]
-		[MaxIterationCount(25)]
+		
 		public void QuikGraph_AddVertex ()
 		{
 			_quikGraphBuilder = new(true, VertexCount);
@@ -65,7 +65,7 @@ namespace Benchmarks.Building
 		}
 
 		[Benchmark]
-		[MaxIterationCount(25)]
+		
 		public void GraphsNET_AddVertex ()
 		{
 			_graphBuilder = new(VertexCount);
@@ -78,7 +78,7 @@ namespace Benchmarks.Building
 		}
 
 		[Benchmark]
-		[MaxIterationCount(25)]
+		
 		public void QuikGraph_AddVertices ()
 		{
 			_quikGraphBuilder = new(true, VertexCount);
@@ -86,7 +86,7 @@ namespace Benchmarks.Building
 		}
 
 		[Benchmark(Baseline = true)]
-		[MaxIterationCount(25)]
+		
 		public void GraphsNET_AddVertices ()
 		{
 			_graphBuilder = new(VertexCount);
@@ -94,21 +94,21 @@ namespace Benchmarks.Building
 		}
 	}
 
-	public class Small_GraphBuilder_AddVertex_Benchmark : GraphBuilder_AddVertex_Benchmark
+	public class Small_GraphBuilder_AddVertex : GraphBuilder_AddVertex
 	{
 		[Params(1, 10, 100)]
 		public override int VertexCount { get; set; }
 	}
 
-	public class Medium_GraphBuilder_AddVertex_Benchmark : GraphBuilder_AddVertex_Benchmark
+	public class Medium_GraphBuilder_AddVertex : GraphBuilder_AddVertex
 	{
-		[Params(1_000, 10_000, 100_000)]
+		[Params(1_000, 5_000, 10_000)]
 		public override int VertexCount { get; set; }
 	}
 
-	public class Large_GraphBuilder_AddVertex_Benchmark : GraphBuilder_AddVertex_Benchmark
+	public class Large_GraphBuilder_AddVertex : GraphBuilder_AddVertex
 	{
-		[Params(1_000_000, 100_000_000, 1_000_000_000)]
+		[Params(100_000, 500_000, 1_000_000)]
 		public override int VertexCount { get; set; }
 	}
 }

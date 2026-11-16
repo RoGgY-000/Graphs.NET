@@ -54,7 +54,7 @@ namespace Graphs.NET.Core
 		} = -1;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal Graph (int vertexCount, int maxVertexIndex, int arcCount, int[] offsets, int[] targets, OneBitArray _removed, GraphBuildingOptionsFixed options)
+		internal Graph (int vertexCount, int maxVertexIndex, int arcCount, int[] offsets, int[] targets, OneBitArray _active, GraphBuildingOptionsFixed options)
 		{
 			VertexCount = vertexCount;
 			ArcCount = arcCount;
@@ -62,7 +62,7 @@ namespace Graphs.NET.Core
 			_offsets = offsets;
 			_targets = targets;
 
-			_activeVertices = _removed;
+			_activeVertices = _active;
 
 			_options = options;
 
@@ -178,8 +178,8 @@ namespace Graphs.NET.Core
 		public static new Graph<TEdgeWeight> Empty => EmptyGraph<TEdgeWeight>.Value;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal Graph (int vertexCount, int maxVertexIndex, int arcCount, int[] offsets, int[] targets, OneBitArray _removed, GraphBuildingOptionsFixed options, TEdgeWeight[] weights)
-			: base(vertexCount, maxVertexIndex, arcCount, offsets, targets, _removed, options)
+		internal Graph (int vertexCount, int maxVertexIndex, int arcCount, int[] offsets, int[] targets, OneBitArray _active, GraphBuildingOptionsFixed options, TEdgeWeight[] weights)
+			: base(vertexCount, maxVertexIndex, arcCount, offsets, targets, _active, options)
 		{
 			_weights = weights;
 		}
@@ -190,7 +190,7 @@ namespace Graphs.NET.Core
 			ArgumentOutOfRangeException.ThrowIfNegative(vertex);
 			ArgumentOutOfRangeException.ThrowIfGreaterThan(vertex, _maxVertexIndex);
 
-			return _activeVertices[vertex] == 0
+			return _activeVertices[vertex] == 1
 				? _weights.AsSpan(_offsets[vertex], _offsets[vertex + 1] - _offsets[vertex])
 				: throw new ArgumentOutOfRangeException();
 		}
@@ -211,8 +211,8 @@ namespace Graphs.NET.Core
 		public static new Graph<TEdgeWeight, TVertexData> Empty => EmptyGraph<TEdgeWeight, TVertexData>.Value;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal Graph (int vertexCount,int maxVertexIndex, int arcCount, int[] offsets, int[] targets, OneBitArray _removed, GraphBuildingOptionsFixed options, TEdgeWeight[] weights, TVertexData[] data) 
-			: base(vertexCount, maxVertexIndex, arcCount, offsets, targets, _removed, options, weights)
+		internal Graph (int vertexCount,int maxVertexIndex, int arcCount, int[] offsets, int[] targets, OneBitArray _active, GraphBuildingOptionsFixed options, TEdgeWeight[] weights, TVertexData[] data) 
+			: base(vertexCount, maxVertexIndex, arcCount, offsets, targets, _active, options, weights)
 		{
 			_data = data;
 		}
@@ -223,7 +223,7 @@ namespace Graphs.NET.Core
 			ArgumentOutOfRangeException.ThrowIfNegative(vertex);
 			ArgumentOutOfRangeException.ThrowIfGreaterThan(vertex, _maxVertexIndex);
 
-			return _activeVertices[vertex] == 0
+			return _activeVertices[vertex] == 1
 				? _data[vertex]
 				: throw new ArgumentOutOfRangeException();
 		}

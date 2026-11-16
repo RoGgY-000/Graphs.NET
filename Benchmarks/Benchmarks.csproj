@@ -12,6 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Graphs.NET\Graphs.NET.csproj" />
+    <ProjectReference Include="..\src\Graphs.NET.csproj" />
   </ItemGroup>
 </Project>
