@@ -108,6 +108,11 @@ namespace Graphs.NET.Core
 
 		private int CalculateDuplicateArcCount ()
 		{
+			if ( !_options.enableDuplicateArcs || ArcCount < 2 )
+			{
+				return 0;
+			}
+
 			int res = 0;
 			for ( int vertex = 0; vertex <= _maxVertexIndex; vertex++ )
 			{
@@ -133,6 +138,11 @@ namespace Graphs.NET.Core
 
 		private int CalculateReflexiveArcCount ()
 		{
+			if ( !_options.enableReflexiveArcs || ArcCount == 0 )
+			{
+				return 0;
+			}
+
 			int res = 0;
 			for ( int vertex = 0; vertex <= _maxVertexIndex; vertex++ )
 			{
@@ -169,13 +179,7 @@ namespace Graphs.NET.Core
 	{
 		protected readonly TEdgeWeight[] _weights;
 
-		private static class EmptyGraph<TWeight>
-			where TWeight : IComparable<TWeight>
-		{
-			internal static Graph<TWeight> Value = new(0, -1, 0, [0], [], OneBitArray.Empty, GraphBuildingOptions.Default, []);
-		}
-
-		public static new Graph<TEdgeWeight> Empty => EmptyGraph<TEdgeWeight>.Value;
+		public static new Graph<TEdgeWeight> Empty { get; } = new(0, -1, 0, [0], [], OneBitArray.Empty, GraphBuildingOptions.Default, []);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal Graph (int vertexCount, int maxVertexIndex, int arcCount, int[] offsets, int[] targets, OneBitArray _active, GraphBuildingOptionsFixed options, TEdgeWeight[] weights)
@@ -202,13 +206,7 @@ namespace Graphs.NET.Core
 	{
 		private readonly TVertexData[] _data;
 
-		private static class EmptyGraph<TWeight, TData>
-			where TWeight : IComparable<TWeight>
-		{
-			internal static Graph<TWeight, TData> Value = new(0, -1, 0, [0], [], OneBitArray.Empty, GraphBuildingOptions.Default, [], []);
-		}
-
-		public static new Graph<TEdgeWeight, TVertexData> Empty => EmptyGraph<TEdgeWeight, TVertexData>.Value;
+		public static new Graph<TEdgeWeight, TVertexData> Empty { get; } = new(0, -1, 0, [0], [], OneBitArray.Empty, GraphBuildingOptions.Default, [], []);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal Graph (int vertexCount,int maxVertexIndex, int arcCount, int[] offsets, int[] targets, OneBitArray _active, GraphBuildingOptionsFixed options, TEdgeWeight[] weights, TVertexData[] data) 

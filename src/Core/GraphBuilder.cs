@@ -55,16 +55,8 @@ namespace Graphs.NET.Core
 			EnsureVertexCapacityOrResize(Math.Max(from, to) + 1);
 			EnsureArcCapacityOrResize(ArcCount + 1);
 
-			if ( _activeVertices[from] == 0 )
-			{
-				_activeVertices[from] = 1;
-				VertexCount++;
-			}
-			if ( _activeVertices[to] == 0 )
-			{
-				_activeVertices[to] = 1;
-				VertexCount++;
-			}
+			CreateVertexIfNotExists(from);
+			CreateVertexIfNotExists(to);
 
 			InsertArc(from, to);
 		}
@@ -98,16 +90,8 @@ namespace Graphs.NET.Core
 			EnsureVertexCapacityOrResize(Math.Max(v1, v2) + 1);
 			EnsureArcCapacityOrResize(ArcCount + 2);
 
-			if ( _activeVertices[v1] == 0 )
-			{
-				_activeVertices[v1] = 1;
-				VertexCount++;
-			}
-			if ( _activeVertices[v2] == 0 )
-			{
-				_activeVertices[v2] = 1;
-				VertexCount++;
-			}
+			CreateVertexIfNotExists(v1);
+			CreateVertexIfNotExists(v2);
 
 			InsertArc(v1, v2);
 			InsertArc(v2, v1);
@@ -120,11 +104,7 @@ namespace Graphs.NET.Core
 
 			EnsureVertexCapacityOrResize(vertex + 1);
 
-			if ( _activeVertices[vertex] == 0 )
-			{
-				_activeVertices[vertex] = 1;
-				VertexCount++;
-			}
+			CreateVertexIfNotExists(vertex);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -147,18 +127,13 @@ namespace Graphs.NET.Core
 			{
 				int vertex = vertices[vertexIndex];
 
-				if ( _activeVertices[vertex] == 0 )
-				{
-					_activeVertices[vertex] = 1;
-					VertexCount++;
-				}
+				CreateVertexIfNotExists(vertex);
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public virtual Graph Build () => Build(GraphBuildingOptions.Default);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public virtual Graph Build (GraphBuildingOptionsFixed options)
 		{
 			if ( VertexCount == 0 )
@@ -263,7 +238,7 @@ namespace Graphs.NET.Core
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveArc (int from, int to)
+		public virtual void RemoveArc (int from, int to)
 		{
 			ArgumentOutOfRangeException.ThrowIfNegative(from);
 			ArgumentOutOfRangeException.ThrowIfNegative(to);
@@ -306,7 +281,7 @@ namespace Graphs.NET.Core
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveVertex (int vertex)
+		public virtual void RemoveVertex (int vertex)
 		{
 			ArgumentOutOfRangeException.ThrowIfNegative(vertex);
 
@@ -412,6 +387,16 @@ namespace Graphs.NET.Core
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected void CreateVertexIfNotExists (int vertex)
+		{
+			if ( _activeVertices[vertex] == 0 )
+			{
+				_activeVertices[vertex] = 1;
+				VertexCount++;
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected virtual void ResizeArcs (int newCapacity)
 		{
 			Array.Resize(ref _targets, newCapacity);
@@ -436,10 +421,7 @@ namespace Graphs.NET.Core
 		protected TEdgeWeight[] _weights;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public GraphBuilder (int vertexCapacity = 0, int arcCapacity = 0) : base(vertexCapacity, arcCapacity)
-		{
-
-		}
+		public GraphBuilder (int vertexCapacity = 0, int arcCapacity = 0) : base(vertexCapacity, arcCapacity) { }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void AddArc (int from, int to, TEdgeWeight weight)
@@ -469,16 +451,8 @@ namespace Graphs.NET.Core
 			EnsureVertexCapacityOrResize(Math.Max(from, to) + 1);
 			EnsureArcCapacityOrResize(ArcCount + 1);
 
-			if ( _activeVertices[from] == 0 )
-			{
-				_activeVertices[from] = 1;
-				VertexCount++;
-			}
-			if ( _activeVertices[to] == 0 )
-			{
-				_activeVertices[to] = 1;
-				VertexCount++;
-			}
+			CreateVertexIfNotExists(from);
+			CreateVertexIfNotExists(to);
 
 			InsertArc(from, to, weight);
 		}
@@ -512,16 +486,8 @@ namespace Graphs.NET.Core
 			EnsureVertexCapacityOrResize(Math.Max(v1, v2) + 1);
 			EnsureArcCapacityOrResize(ArcCount + 2);
 
-			if ( _activeVertices[v1] == 0 )
-			{
-				_activeVertices[v1] = 1;
-				VertexCount++;
-			}
-			if ( _activeVertices[v2] == 0 )
-			{
-				_activeVertices[v2] = 1;
-				VertexCount++;
-			}
+			CreateVertexIfNotExists(v1);
+			CreateVertexIfNotExists(v2);
 
 			InsertArc(v1, v2, weight);
 			InsertArc(v2, v1, weight);
@@ -530,7 +496,6 @@ namespace Graphs.NET.Core
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override Graph<TEdgeWeight> Build () => Build(GraphBuildingOptions.Default);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override Graph<TEdgeWeight> Build (GraphBuildingOptionsFixed options)
 		{
 			if ( VertexCount == 0 )
@@ -538,10 +503,10 @@ namespace Graphs.NET.Core
 				return Graph<TEdgeWeight>.Empty;
 			}
 
-			int[] offsets = new int[VertexCount + 1];
-
 			int totalEdgeCount = 0;
+
 			ArrayPool<int> intPool = ArrayPool<int>.Shared;
+			int[] temporaryOffsets = intPool.Rent(VertexCapacity + 1);
 			int[] temporaryTargets = intPool.Rent(ArcCount);
 
 			ArrayPool<TEdgeWeight> weightPool = ArrayPool<TEdgeWeight>.Shared;
@@ -549,6 +514,7 @@ namespace Graphs.NET.Core
 
 			try
 			{
+				temporaryOffsets[0] = 0;
 				int maxVertexIndex = 0;
 
 				for ( int vertex = 0; vertex < VertexCapacity; vertex++ )
@@ -569,68 +535,214 @@ namespace Graphs.NET.Core
 								add = false;
 							}
 							if ( !options.enableDuplicateArcs
-								&& temporaryTargets.AsSpan(offsets[vertex], currentVertexOffset).Contains(target) )
+								&& temporaryTargets.AsSpan(temporaryOffsets[vertex], currentVertexOffset).Contains(target) )
 							{
 								add = false;
 							}
 
 							if ( add )
 							{
-								temporaryTargets[offsets[vertex] + currentVertexOffset] = target;
-								temporaryWeights[offsets[vertex] + currentVertexOffset++] = _weights[pointer];
+								temporaryTargets[temporaryOffsets[vertex] + currentVertexOffset] = target;
+								temporaryWeights[temporaryOffsets[vertex] + currentVertexOffset++] = _weights[pointer];
 							}
 							pointer = _nexts[pointer];
 						}
-						offsets[vertex + 1] = offsets[vertex] + currentVertexOffset;
-						Span<int> neighbors = temporaryTargets.AsSpan(offsets[vertex], offsets[vertex + 1] - offsets[vertex]);
-						Span<TEdgeWeight> neighborsWeights = temporaryWeights.AsSpan(offsets[vertex], offsets[vertex + 1] - offsets[vertex]);
+						temporaryOffsets[vertex + 1] = temporaryOffsets[vertex] + currentVertexOffset;
+						Span<int> neighbors = temporaryTargets.AsSpan(temporaryOffsets[vertex], temporaryOffsets[vertex + 1] - temporaryOffsets[vertex]);
+						Span<TEdgeWeight> neighborsWeights = temporaryWeights.AsSpan(temporaryOffsets[vertex], temporaryOffsets[vertex + 1] - temporaryOffsets[vertex]);
 						neighbors.Sort(neighborsWeights);
 						totalEdgeCount += currentVertexOffset;
 					}
+					else
+					{
+						temporaryOffsets[vertex + 1] = temporaryOffsets[vertex];
+					}
 				}
+				int[] offsets = new int[maxVertexIndex + 2];
+				temporaryOffsets.AsSpan(0, maxVertexIndex + 2).CopyTo(offsets.AsSpan());
+
 				int[] targets = new int[totalEdgeCount];
 				temporaryTargets.AsSpan(0, totalEdgeCount).CopyTo(targets.AsSpan());
 
 				TEdgeWeight[] weights = new TEdgeWeight[totalEdgeCount];
 				temporaryWeights.AsSpan(0, totalEdgeCount).CopyTo(weights.AsSpan());
 
-				OneBitArray removed = new(_activeVertices);
+				OneBitArray active = new(_activeVertices);
 
-				Graph<TEdgeWeight> g = new(VertexCount, maxVertexIndex, totalEdgeCount, offsets, targets, removed, options, weights);
+				Graph<TEdgeWeight> g = new(VertexCount, maxVertexIndex, totalEdgeCount, offsets, targets, active, options, weights);
 				return g;
 			}
 			finally
 			{
+				intPool.Return(temporaryOffsets);
 				intPool.Return(temporaryTargets);
+
+				if ( RuntimeHelpers.IsReferenceOrContainsReferences<TEdgeWeight>() )
+				{
+					temporaryWeights.AsSpan(0, totalEdgeCount).Clear();
+				}
 				weightPool.Return(temporaryWeights);
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public TEdgeWeight GetWeight (int from, int to)
+		public override void RemoveArc (int from, int to)
 		{
 			ArgumentOutOfRangeException.ThrowIfNegative(from);
 			ArgumentOutOfRangeException.ThrowIfNegative(to);
 
-			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(from, VertexCapacity);
-			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(to, VertexCapacity);
-
-			if ( _activeVertices[from] == 0 || _activeVertices[to] == 0 )
+			if ( from >= VertexCapacity || to >= VertexCapacity
+				|| _activeVertices[from] == 0 || _activeVertices[to] == 0 )
 			{
-				throw new ArgumentOutOfRangeException();
+				return;
 			}
 
 			int pointer = _tails[from];
+
+			if ( pointer == -1 )
+			{
+				return;
+			}
+
+			if ( _targets[pointer] == to )
+			{
+				_tails[from] = _nexts[pointer];
+				_weights[pointer] = default!;
+				ArcCount--;
+				return;
+			}
+
+			int previousPointer = pointer;
+			pointer = _nexts[pointer];
+
 			while ( pointer != -1 )
 			{
 				if ( _targets[pointer] == to )
 				{
-					return _weights[pointer];
+					_nexts[previousPointer] = _nexts[pointer];
+					_nexts[pointer] = -1;
+					_weights[pointer] = default!;
+					ArcCount--;
+					return;
 				}
+				previousPointer = pointer;
 				pointer = _nexts[pointer];
 			}
+		}
 
-			throw new InvalidOperationException();
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void RemoveArc (int from, int to, TEdgeWeight weight)
+		{
+			ArgumentOutOfRangeException.ThrowIfNegative(from);
+			ArgumentOutOfRangeException.ThrowIfNegative(to);
+
+			if ( from >= VertexCapacity || to >= VertexCapacity
+				|| _activeVertices[from] == 0 || _activeVertices[to] == 0 )
+			{
+				return;
+			}
+
+			int pointer = _tails[from];
+
+			if ( pointer == -1 )
+			{
+				return;
+			}
+
+			Comparer<TEdgeWeight> comparer = Comparer<TEdgeWeight>.Default;
+
+			if ( _targets[pointer] == to 
+				&& comparer.Compare(_weights[pointer], weight) == 0 )
+			{
+				_tails[from] = _nexts[pointer];
+				_weights[pointer] = default!;
+				ArcCount--;
+				return;
+			}
+
+			int previousPointer = pointer;
+			pointer = _nexts[pointer];
+
+			while ( pointer != -1 )
+			{
+				if ( _targets[pointer] == to )
+				{
+					_nexts[previousPointer] = _nexts[pointer];
+					_nexts[pointer] = -1;
+					_weights[pointer] = default!;
+					ArcCount--;
+					return;
+				}
+				previousPointer = pointer;
+				pointer = _nexts[pointer];
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override void RemoveVertex (int vertex)
+		{
+			ArgumentOutOfRangeException.ThrowIfNegative(vertex);
+
+			if ( vertex >= VertexCapacity || _activeVertices[vertex] == 0 )
+			{
+				return;
+			}
+
+			_activeVertices[vertex] = 0;
+			VertexCount--;
+
+			int removedArcs = 0;
+
+			int pointer = _tails[vertex];
+			while ( pointer != -1 )
+			{
+				removedArcs++;
+				_weights[pointer] = default!;
+				pointer = _nexts[pointer];
+			}
+			_tails[vertex] = -1;
+
+			for ( int currentVertex = 0; currentVertex < VertexCapacity; currentVertex++ )
+			{
+				if ( _activeVertices[currentVertex] == 1 )
+				{
+					pointer = _tails[currentVertex];
+
+					while ( pointer != -1 && _targets[pointer] == vertex )
+					{
+						removedArcs++;
+						_weights[pointer] = default!;
+						pointer = _nexts[pointer];
+					}
+
+					_tails[currentVertex] = pointer;
+
+					if ( pointer == -1 )
+					{
+						continue;
+					}
+
+					int previousPointer = pointer;
+					pointer = _nexts[pointer];
+					while ( pointer != -1 )
+					{
+						int nextPointer = _nexts[pointer];
+
+						if ( _targets[pointer] == vertex )
+						{
+							removedArcs++;
+							_weights[pointer] = default!;
+							_nexts[previousPointer] = nextPointer;
+						}
+						else
+						{
+							previousPointer = pointer;
+						}
+						pointer = nextPointer;
+					}
+				}
+			}
+			ArcCount -= removedArcs;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -654,9 +766,7 @@ namespace Graphs.NET.Core
 	{
 		private TVertexData[] _data;
 
-		public GraphBuilder (int vertexCapacity = 0, int arcCapacity = 0) : base(vertexCapacity, arcCapacity)
-		{
-		}
+		public GraphBuilder (int vertexCapacity = 0, int arcCapacity = 0) : base(vertexCapacity, arcCapacity) { }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void AddVertex (int vertex, TVertexData data)
@@ -665,32 +775,37 @@ namespace Graphs.NET.Core
 
 			EnsureVertexCapacityOrResize(vertex + 1);
 
-			if ( _activeVertices[vertex] == 0 )
-			{
-				_activeVertices[vertex] = 1;
-				VertexCount++;
-			}
+			CreateVertexIfNotExists(vertex);
 
 			_data[vertex] = data;
-
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void SetVertexData (int vertex, TVertexData data)
+		public void AddVertices (ReadOnlySpan<int> vertices, ReadOnlySpan<TVertexData> data)
 		{
-			ArgumentOutOfRangeException.ThrowIfNegative(vertex);
-			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(vertex, VertexCapacity);
-
-			if ( _activeVertices[vertex] == 0 )
+			if ( vertices.IsEmpty )
 			{
-				throw new ArgumentOutOfRangeException();
+				return;
 			}
-			
-			EnsureVertexCapacityOrResize(vertex + 1);
 
-			_data[vertex] = data;
+			int maxVertex = -1;
+			for ( int vertexIndex = 0; vertexIndex < vertices.Length; vertexIndex++ )
+			{
+				maxVertex = Math.Max(maxVertex, vertices[vertexIndex]);
+			}
+
+			EnsureVertexCapacityOrResize(maxVertex + 1);
+
+			for ( int vertexIndex = 0; vertexIndex < vertices.Length; vertexIndex++ )
+			{
+				int vertex = vertices[vertexIndex];
+
+				CreateVertexIfNotExists(vertex);
+				_data[vertex] = data[vertexIndex];
+			}
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override Graph<TEdgeWeight, TVertexData> Build () => Build(GraphBuildingOptions.Default);
 
 		public override Graph<TEdgeWeight, TVertexData> Build (GraphBuildingOptionsFixed options)
@@ -700,10 +815,10 @@ namespace Graphs.NET.Core
 				return Graph<TEdgeWeight, TVertexData>.Empty;
 			}
 
-			int[] offsets = new int[VertexCount + 1];
-
 			int totalEdgeCount = 0;
+
 			ArrayPool<int> intPool = ArrayPool<int>.Shared;
+			int[] temporaryOffsets = intPool.Rent(VertexCapacity + 1);
 			int[] temporaryTargets = intPool.Rent(ArcCount);
 
 			ArrayPool<TEdgeWeight> weightPool = ArrayPool<TEdgeWeight>.Shared;
@@ -711,6 +826,7 @@ namespace Graphs.NET.Core
 
 			try
 			{
+				temporaryOffsets[0] = 0;
 				int maxVertexIndex = 0;
 
 				for ( int vertex = 0; vertex < VertexCapacity; vertex++ )
@@ -733,33 +849,40 @@ namespace Graphs.NET.Core
 								}
 							}
 							if ( !options.enableDuplicateArcs
-							&& temporaryTargets.AsSpan(offsets[vertex], currentVertexOffset).Contains(target) )
+							&& temporaryTargets.AsSpan(temporaryOffsets[vertex], currentVertexOffset).Contains(target) )
 							{
 								add = false;
 							}
 
 							if ( add )
 							{
-								temporaryTargets[offsets[vertex] + currentVertexOffset] = target;
-								temporaryWeights[offsets[vertex] + currentVertexOffset++] = _weights[pointer];
+								temporaryTargets[temporaryOffsets[vertex] + currentVertexOffset] = target;
+								temporaryWeights[temporaryOffsets[vertex] + currentVertexOffset++] = _weights[pointer];
 							}
 							pointer = _nexts[pointer];
 						}
-						offsets[vertex + 1] = offsets[vertex] + currentVertexOffset;
-						Span<int> neighbors = temporaryTargets.AsSpan(offsets[vertex], offsets[vertex + 1] - offsets[vertex]);
-						Span<TEdgeWeight> neighborsWeights = temporaryWeights.AsSpan(offsets[vertex], offsets[vertex + 1] - offsets[vertex]);
+						temporaryOffsets[vertex + 1] = temporaryOffsets[vertex] + currentVertexOffset;
+						Span<int> neighbors = temporaryTargets.AsSpan(temporaryOffsets[vertex], temporaryOffsets[vertex + 1] - temporaryOffsets[vertex]);
+						Span<TEdgeWeight> neighborsWeights = temporaryWeights.AsSpan(temporaryOffsets[vertex], temporaryOffsets[vertex + 1] - temporaryOffsets[vertex]);
 						neighbors.Sort(neighborsWeights);
 						totalEdgeCount += currentVertexOffset;
 					}
+					else
+					{
+						temporaryOffsets[vertex + 1] = temporaryOffsets[vertex];
+					}
 				}
+				int[] offsets = new int[maxVertexIndex + 2];
+				temporaryOffsets.AsSpan(0, maxVertexIndex + 2).CopyTo(offsets.AsSpan());
+
 				int[] targets = new int[totalEdgeCount];
 				temporaryTargets.AsSpan(0, totalEdgeCount).CopyTo(targets.AsSpan());
 
 				TEdgeWeight[] weights = new TEdgeWeight[totalEdgeCount];
 				temporaryWeights.AsSpan(0, totalEdgeCount).CopyTo(weights.AsSpan());
 
-				TVertexData[] data = new TVertexData[VertexCount];
-				_data.AsSpan(0, VertexCount).CopyTo(data.AsSpan());
+				TVertexData[] data = new TVertexData[VertexCapacity];
+				_data.AsSpan(0, VertexCapacity).CopyTo(data.AsSpan());
 
 				OneBitArray removed = new(_activeVertices);
 
@@ -768,9 +891,64 @@ namespace Graphs.NET.Core
 			}
 			finally
 			{
+				intPool.Return(temporaryOffsets);
 				intPool.Return(temporaryTargets);
+				if ( RuntimeHelpers.IsReferenceOrContainsReferences<TEdgeWeight>() )
+				{
+					temporaryWeights.AsSpan(0, totalEdgeCount).Clear();
+				}
 				weightPool.Return(temporaryWeights);
 			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public TVertexData? GetVertexData (int vertex)
+		{
+			ArgumentOutOfRangeException.ThrowIfNegative(vertex);
+			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(vertex, VertexCapacity);
+
+			return _activeVertices[vertex] == 1
+				? _data[vertex] 
+				: throw new ArgumentOutOfRangeException();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override void RemoveVertex (int vertex)
+		{
+			ArgumentOutOfRangeException.ThrowIfNegative(vertex);
+
+			if ( vertex >= VertexCapacity || _activeVertices[vertex] == 0 )
+			{
+				return;
+			}
+
+			base.RemoveVertex(vertex);
+			_data[vertex] = default!;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void RemoveVertexData (int vertex)
+		{
+			ArgumentOutOfRangeException.ThrowIfNegative(vertex);
+
+			if ( vertex < VertexCapacity )
+			{
+				_data[vertex] = default!;
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void SetVertexData (int vertex, TVertexData data)
+		{
+			ArgumentOutOfRangeException.ThrowIfNegative(vertex);
+			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(vertex, VertexCapacity);
+
+			if ( _activeVertices[vertex] == 0 )
+			{
+				throw new ArgumentOutOfRangeException();
+			}
+
+			_data[vertex] = data;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

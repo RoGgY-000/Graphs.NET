@@ -543,50 +543,50 @@ namespace Tests.Data
 			}
 		}
 
-		public static IEnumerable<object[]> GetRandomGraphBuildersWithWeightAndExpected ()
+		public static IEnumerable<object[]> GetRandomGraphBuildersAndExpected ()
 		{
 			// 17)
-			yield return GenerateRandomGraphBuilderWithWeightAndExpected(1, 1);
+			yield return GenerateRandomGraphBuilderAndExpected(1, 1);
 			// 18)
-			yield return GenerateRandomGraphBuilderWithWeightAndExpected(1, 10);
+			yield return GenerateRandomGraphBuilderAndExpected(1, 10);
 			// 19)
-			yield return GenerateRandomGraphBuilderWithWeightAndExpected(1, 100);
+			yield return GenerateRandomGraphBuilderAndExpected(1, 100);
 			// 20)
-			yield return GenerateRandomGraphBuilderWithWeightAndExpected(1, 1_000);
+			yield return GenerateRandomGraphBuilderAndExpected(1, 1_000);
 			// 21)
-			yield return GenerateRandomGraphBuilderWithWeightAndExpected(10, 1);
+			yield return GenerateRandomGraphBuilderAndExpected(10, 1);
 			// 22)
-			yield return GenerateRandomGraphBuilderWithWeightAndExpected(10, 10);
+			yield return GenerateRandomGraphBuilderAndExpected(10, 10);
 			// 23)
-			yield return GenerateRandomGraphBuilderWithWeightAndExpected(10, 100);
+			yield return GenerateRandomGraphBuilderAndExpected(10, 100);
 			// 24)
-			yield return GenerateRandomGraphBuilderWithWeightAndExpected(10, 1_000);
+			yield return GenerateRandomGraphBuilderAndExpected(10, 1_000);
 			// 25)
-			yield return GenerateRandomGraphBuilderWithWeightAndExpected(100, 1);
+			yield return GenerateRandomGraphBuilderAndExpected(100, 1);
 			// 26)
-			yield return GenerateRandomGraphBuilderWithWeightAndExpected(100, 10);
+			yield return GenerateRandomGraphBuilderAndExpected(100, 10);
 			// 27)
-			yield return GenerateRandomGraphBuilderWithWeightAndExpected(100, 100);
+			yield return GenerateRandomGraphBuilderAndExpected(100, 100);
 			// 28)
-			yield return GenerateRandomGraphBuilderWithWeightAndExpected(100, 1_000);
+			yield return GenerateRandomGraphBuilderAndExpected(100, 1_000);
 			// 29)
-			yield return GenerateRandomGraphBuilderWithWeightAndExpected(1_000, 1);
+			yield return GenerateRandomGraphBuilderAndExpected(1_000, 1);
 			// 30)
-			yield return GenerateRandomGraphBuilderWithWeightAndExpected(1_000, 10);
+			yield return GenerateRandomGraphBuilderAndExpected(1_000, 10);
 			// 31)
-			yield return GenerateRandomGraphBuilderWithWeightAndExpected(1_000, 100);
+			yield return GenerateRandomGraphBuilderAndExpected(1_000, 100);
 			// 32)
-			yield return GenerateRandomGraphBuilderWithWeightAndExpected(1_000, 1_000);
+			yield return GenerateRandomGraphBuilderAndExpected(1_000, 1_000);
 		}
 
-		private static object[] GenerateRandomGraphBuilderWithWeightAndExpected (int ArcCount, int vertexCount)
+		private static object[] GenerateRandomGraphBuilderAndExpected (int arcCount, int vertexCount)
 		{
 			GraphBuilder<string> builder = new();
 			Dictionary<int, List<int>> naive = new(vertexCount);
 			Dictionary<int, Dictionary<int, List<string>>> weightBuilder = [];
 			Random r = new(42);
 
-			for ( int i = 0; i < ArcCount; i++ )
+			for ( int i = 0; i < arcCount; i++ )
 			{
 				int from = r.Next(0, vertexCount), to = r.Next(0, vertexCount);
 
@@ -642,8 +642,8 @@ namespace Tests.Data
 				builder,
 				new ExpectedGraphBuilder<string>
 				{
-					ArcCapacity = (int) BitOperations.RoundUpToPowerOf2( (uint) ArcCount),
-					ArcCount = ArcCount,
+					ArcCapacity = (int) BitOperations.RoundUpToPowerOf2( (uint) arcCount),
+					ArcCount = arcCount,
 					VertexCapacity = (int) BitOperations.RoundUpToPowerOf2( (uint) naive.Keys.Max() + 1),
 					VertexCount = naive.Count,
 					VerticesAndArcs = VertiсesAndArcs,

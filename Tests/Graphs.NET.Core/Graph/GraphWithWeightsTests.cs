@@ -3,14 +3,26 @@ using Tests.Data;
 
 namespace Tests.Graphs.NET.Core
 {
-	public class GraphWithWeightsTests
+	public class GraphWithWeightsTests : GraphTests
 	{
 		[Theory]
-		[MemberData(nameof(GraphTestData.GetGraphsAndExpected), MemberType = typeof(GraphTestData))]
-		[MemberData(nameof(GraphTestData.GetRandomGraphsAndExpected), MemberType = typeof(GraphTestData))]
-		public void ArcCountTests (Graph graph, ExpectedGraph expected)
+		[MemberData(nameof(GraphWithWeightTestData.GetGraphsAndExpected), MemberType = typeof(GraphWithWeightTestData))]
+		[MemberData(nameof(GraphWithWeightTestData.GetRandomGraphsAndExpected), MemberType = typeof(GraphWithWeightTestData))]
+		public void GetWeightTests (Graph<string> graph, ExpectedGraphWithWeights<string> expected)
 		{
-			Assert.Equal(expected.ArcCount, graph.ArcCount);
+			foreach ( int vertex in expected.Weights.Keys )
+			{
+				Dictionary<int, string[]> expectedWeights = expected.Weights[vertex];
+				string[] allExpectedWeightsArray = expectedWeights
+					.OrderBy(kvp => kvp.Key)
+					.SelectMany(kvp => kvp.Value)
+					.ToArray();
+				ReadOnlySpan<string> graphWeights = graph.GetWeights(vertex);
+
+				Assert.Equal(allExpectedWeightsArray.Length, graphWeights.Length);
+
+				Assert.True(allExpectedWeightsArray.SequenceEqual(graphWeights));
+			}
 		}
 	}
 }

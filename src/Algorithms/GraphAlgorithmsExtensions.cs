@@ -10,7 +10,7 @@ namespace Graphs.NET.Algorithms
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool TryTopologicalSort (this Graph g, Span<int> destination)
 		{
-			if ( (destination.IsEmpty && g.VertexCount > 0) || destination.Length < g.VertexCount )
+			if ( destination.Length < g.VertexCount )
 			{
 				throw new ArgumentException("destination span must be greater than or equal to graph vertex count");
 			}
@@ -33,38 +33,33 @@ namespace Graphs.NET.Algorithms
 			return success;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void TopologicalSortInCertainlyAcyclicGraph (Graph g, Span<int> destination)
 		{
 			if ( g.VertexCount == 0 )
 			{
 				return;
 			}
-			else if ( g.VertexCount == 1 )
-			{
-				destination[0] = 0;
-				return;
-			}
 
 			int resultIndex = g.VertexCount - 1;
 			int stackEnd = 0;
-			int[] vStack = ArrayPool<int>.Shared.Rent(g.VertexCount);
-			int[] nStack = ArrayPool<int>.Shared.Rent(g.VertexCount);
+			int[] vStack = ArrayPool<int>.Shared.Rent(g._maxVertexIndex + 1);
+			int[] nStack = ArrayPool<int>.Shared.Rent(g._maxVertexIndex + 1);
 
-			int TwoBitArrayLength = TwoBitArraySpan.GetRequiredLengthFor(g.VertexCount);
-			int[] visitedArray = ArrayPool<int>.Shared.Rent(TwoBitArrayLength);
-			visitedArray.AsSpan(0, TwoBitArrayLength).Clear();
+			int twoBitArrayLength = TwoBitArraySpan.GetRequiredLengthFor(g._maxVertexIndex + 1);
+			int[] visitedArray = ArrayPool<int>.Shared.Rent(twoBitArrayLength);
+			visitedArray.AsSpan(0, twoBitArrayLength).Clear();
 			TwoBitArraySpan visited = new(visitedArray.AsSpan());
 
 			try
 			{
-				for ( int i = 0; i < g.VertexCount; i++ )
+				for ( int vertex = 0; vertex <= g._maxVertexIndex; vertex++ )
 				{
-					if ( visited[i] == 0 )
+					if ( g._activeVertices[vertex] == 1
+						&& visited[vertex] == 0 )
 					{
-						vStack[stackEnd] = i;
+						vStack[stackEnd] = vertex;
 						nStack[stackEnd] = 0;
-						visited[i] = 1;
+						visited[vertex] = 1;
 						stackEnd++;
 
 						while ( stackEnd > 0 )
@@ -102,38 +97,33 @@ namespace Graphs.NET.Algorithms
 			}
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static bool TopologicalSortWithAcyclicityCheck (Graph g, Span<int> destination)
 		{
 			if ( g.VertexCount == 0 )
 			{
 				return true;
 			}
-			else if ( g.VertexCount == 1 )
-			{
-				destination[0] = 0;
-				return !g.HasArc(0, 0);
-			}
 
 			int resultIndex = g.VertexCount - 1;
 			int stackEnd = 0;
-			int[] vStack = ArrayPool<int>.Shared.Rent(g.VertexCount);
-			int[] nStack = ArrayPool<int>.Shared.Rent(g.VertexCount);
+			int[] vStack = ArrayPool<int>.Shared.Rent(g._maxVertexIndex + 1);
+			int[] nStack = ArrayPool<int>.Shared.Rent(g._maxVertexIndex + 1);
 
-			int TwoBitArrayLength = TwoBitArraySpan.GetRequiredLengthFor(g.VertexCount);
-			int[] visitedArray = ArrayPool<int>.Shared.Rent(TwoBitArrayLength);
-			visitedArray.AsSpan(0, TwoBitArrayLength).Clear();
+			int twoBitArrayLength = TwoBitArraySpan.GetRequiredLengthFor(g._maxVertexIndex + 1);
+			int[] visitedArray = ArrayPool<int>.Shared.Rent(twoBitArrayLength);
+			visitedArray.AsSpan(0, twoBitArrayLength).Clear();
 			TwoBitArraySpan visited = new(visitedArray.AsSpan());
 
 			try
 			{
-				for ( int i = 0; i < g.VertexCount; i++ )
+				for ( int vertex = 0; vertex <= g._maxVertexIndex; vertex++ )
 				{
-					if ( visited[i] == 0 )
+					if ( g._activeVertices[vertex] == 1
+						&& visited[vertex] == 0 )
 					{
-						vStack[stackEnd] = i;
+						vStack[stackEnd] = vertex;
 						nStack[stackEnd] = 0;
-						visited[i] = 1;
+						visited[vertex] = 1;
 						stackEnd++;
 
 						while ( stackEnd > 0 )
@@ -177,10 +167,14 @@ namespace Graphs.NET.Algorithms
 			}
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static bool CalculateIsAcyclic (this Graph g)
 		{
-			if ( g.VertexCount == 0 )
+			if ( g.ArcCount == 0 )
+			{
+				return true;
+			}
+			else if ( !g.IsAllowingReflexiveArcs
+				&& g.ArcCount < 2 )
 			{
 				return true;
 			}

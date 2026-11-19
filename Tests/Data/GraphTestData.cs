@@ -479,12 +479,12 @@ namespace Tests.Data
 				value.Add(to);
 			}
 
-			Dictionary<int, int[]> VertivesAndArcs = new();
+			Dictionary<int, int[]> VerticesAndArcs = new();
 			foreach ( int vertex in naive.Keys )
 			{
 				int[] arr = naive[vertex].ToArray();
 				arr.Sort();
-				VertivesAndArcs.Add(vertex, arr);
+				VerticesAndArcs.Add(vertex, arr);
 			}
 
 			return
@@ -497,8 +497,8 @@ namespace Tests.Data
 					AverageVertexDegree = 2f * arcCount / naive.Count,
 					DuplicateArcCount = duplicate,
 					ReflexiveArcsCount = reflexive,
-					IsAcyclic = !NaiveGraphExtensions.RunNaiveCycleDetection(naive, naive.Count),
-					VerticesAndArcs = VertivesAndArcs
+					IsAcyclic = !NaiveGraphExtensions.RunNaiveCycleDetection(naive),
+					VerticesAndArcs = VerticesAndArcs
 				}
 			];
 		}
@@ -513,12 +513,6 @@ namespace Tests.Data
 		public bool IsAcyclic { get; set; }
 		public int ReflexiveArcsCount { get; set; }
 		public Dictionary<int, int[]> VerticesAndArcs { get; set; }
-	}
-
-	public class ExpectedGraphWithWeights : ExpectedGraph
-	{
-		public int[][] ValueWeights { get; set; }
-		public string[][] ReferenceWeights { get; set; }
 	}
 
 	public class ExpectedGraphWithData : ExpectedGraph
