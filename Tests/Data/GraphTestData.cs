@@ -29,9 +29,13 @@ namespace Tests.Data
 			{
 				GraphBuilder builder = new();
 				builder.AddVertex(0);
+				builder.AddArc(0, 0);
+
+				GraphBuildingOptions options = new();
+				options.DisableReflexiveArcs();
 
 				yield return new object[] {
-					builder.Build(),
+					builder.Build(options.Fix()),
 					new ExpectedGraph {
 						VertexCount = 1,
 						ArcCount = 0,
@@ -119,10 +123,14 @@ namespace Tests.Data
 			{
 				GraphBuilder builder = new();
 				builder.AddArcAndVertices(1, 1);
+				builder.AddArc(1, 1);
 				builder.AddVertex(0);
 
+				GraphBuildingOptions options = new();
+				options.DisableDuplicateArcs();
+
 				yield return new object[] {
-					builder.Build(),
+					builder.Build(options.Fix()),
 					new ExpectedGraph {
 						VertexCount = 2,
 						ArcCount = 1,
@@ -497,7 +505,7 @@ namespace Tests.Data
 					AverageVertexDegree = 2f * arcCount / naive.Count,
 					DuplicateArcCount = duplicate,
 					ReflexiveArcsCount = reflexive,
-					IsAcyclic = !NaiveGraphExtensions.RunNaiveCycleDetection(naive),
+					IsAcyclic = !NaiveGraphExtensions.RunNaiveCycleDetection(naive, naive.Count),
 					VerticesAndArcs = VerticesAndArcs
 				}
 			];
@@ -513,19 +521,5 @@ namespace Tests.Data
 		public bool IsAcyclic { get; set; }
 		public int ReflexiveArcsCount { get; set; }
 		public Dictionary<int, int[]> VerticesAndArcs { get; set; }
-	}
-
-	public class ExpectedGraphWithData : ExpectedGraph
-	{
-		public int[] ValueData { get; set; }
-		public string[] ReferenceData { get; set; }
-	}
-
-	public class ExpectedGraphWithWeightsAndData : ExpectedGraph
-	{
-		public int[][] ValueWeights { get; set; }
-		public string[][] ReferenceWeights { get; set; }
-		public int[] ValueData { get; set; }
-		public string[] ReferenceData { get; set; }
 	}
 }

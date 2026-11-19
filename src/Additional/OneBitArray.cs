@@ -6,7 +6,7 @@ namespace Graphs.NET.Additional
 	{
 		private readonly int[] _array;
 
-		public static OneBitArray Empty = new(0);
+		public static readonly OneBitArray Empty = new(0);
 
 		public int Length { get; private set; }
 

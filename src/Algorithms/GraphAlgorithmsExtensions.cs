@@ -5,30 +5,47 @@ using Graphs.NET.Core;
 
 namespace Graphs.NET.Algorithms
 {
+	/// <summary>
+	/// Provides extension methods for running graph algorithms on <see cref="Graph"/> instances.
+	/// </summary>
 	public static class GraphAlgorithmsExtensions
 	{
+		/// <summary>
+		/// Attempts to compute a topological ordering of the vertices in the directed graph.
+		/// </summary>
+		/// <param name="graph">The target directed graph.</param>
+		/// <param name="destination">
+		/// The buffer to write the topologically sorted vertex indices into. Must have a length of at least <see cref="Graph.VertexCount"/>.
+		/// </param>
+		/// <returns>
+		/// <see langword="true"/> if the graph is acyclic and <paramref name="destination"/> was populated with a valid topological order;
+		/// <see langword="false"/> if the graph contains a cycle (in which case the contents of <paramref name="destination"/> are undefined).
+		/// </returns>
+		/// <exception cref="ArgumentException">
+		/// Thrown when <paramref name="destination"/> length is less than <see cref="Graph.VertexCount"/>.
+		/// </exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool TryTopologicalSort (this Graph g, Span<int> destination)
+		public static bool TryTopologicalSort (this Graph graph, Span<int> destination)
 		{
-			if ( destination.Length < g.VertexCount )
+			if ( destination.Length < graph.VertexCount )
 			{
-				throw new ArgumentException("destination span must be greater than or equal to graph vertex count");
+				throw new ArgumentException("destination span must be greater than or equal to graph vertex count", nameof(destination));
 			}
 
-			if ( g._isAcyclicCalculated && !g.IsAcyclic )
+			if ( graph._isAcyclicCalculated && !graph.IsAcyclic )
 			{
 				return false;
 			}
 
-			if ( g._isAcyclicCalculated && g.IsAcyclic )
+			if ( graph._isAcyclicCalculated && graph.IsAcyclic )
 			{
-				TopologicalSortInCertainlyAcyclicGraph(g, destination);
+				TopologicalSortInCertainlyAcyclicGraph(graph, destination);
 				return true;
 			}
 
-			bool success = TopologicalSortWithAcyclicityCheck(g, destination);
-			g.IsAcyclic = success;
-			g._isAcyclicCalculated = true;
+			bool success = TopologicalSortWithAcyclicityCheck(graph, destination);
+			graph.IsAcyclic = success;
+			graph._isAcyclicCalculated = true;
 
 			return success;
 		}

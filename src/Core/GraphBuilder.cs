@@ -5,19 +5,36 @@ using Graphs.NET.Additional;
 
 namespace Graphs.NET.Core
 {
+	/// <summary>
+	/// Provides a mutable, array-backed builder for constructing immutable Compressed Sparse Row (CSR) <see cref="Graph"/> instances.
+	/// </summary>
 	public class GraphBuilder
 	{
-		private protected OneBitArray _activeVertices;
-		protected int[] _tails;
-		protected int[] _targets;
-		protected int[] _nexts;
-		protected int _newArcIndex;
+		private protected OneBitArray _activeVertices = OneBitArray.Empty;
+		private protected int[] _tails = [];
+		private protected int[] _targets = [];
+		private protected int[] _nexts = [];
+		private protected int _freeListTail = -1;
+		private protected int _newArcIndex;
 
-		public int ArcCapacity { get; protected set; }
-		public int ArcCount { get; protected set; }
-		public int VertexCapacity { get; protected set; }
-		public int VertexCount { get; protected set; }
+		/// <summary>Gets the current allocated capacity for arcs.</summary>
+		public int ArcCapacity { get; private protected set; }
 
+		/// <summary>Gets the current number of active arcs in the builder.</summary>
+		public int ArcCount { get; private protected set; }
+
+		/// <summary>Gets the current allocated capacity for vertices.</summary>
+		public int VertexCapacity { get; private protected set; }
+
+		/// <summary>Gets the current number of active vertices in the builder.</summary>
+		public int VertexCount { get; private protected set; }
+
+		/// <summary>
+		/// Initializes a new instance of <see cref="GraphBuilder"/> with optional initial vertex and arc capacities.
+		/// </summary>
+		/// <param name="vertexCapacity">The initial capacity for vertices. Rounded up to a power of two if positive.</param>
+		/// <param name="arcCapacity">The initial capacity for arcs. Rounded up to a power of two if positive.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="vertexCapacity"/> or <paramref name="arcCapacity"/> is negative.</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public GraphBuilder (int vertexCapacity = 0, int arcCapacity = 0)
 		{
@@ -27,6 +44,12 @@ namespace Graphs.NET.Core
 			EnsureArcCapacityOrResize(arcCapacity);
 		}
 
+		/// <summary>
+		/// Adds a directed arc between two existing vertices.
+		/// </summary>
+		/// <param name="from">The source vertex index.</param>
+		/// <param name="to">The target vertex index.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Thrown when either vertex index is negative or does not exist in the builder.</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void AddArc (int from, int to)
 		{
@@ -46,6 +69,12 @@ namespace Graphs.NET.Core
 			InsertArc(from, to);
 		}
 
+		/// <summary>
+		/// Adds a directed arc between two vertices, automatically creating either vertex if it does not yet exist.
+		/// </summary>
+		/// <param name="from">The source vertex index.</param>
+		/// <param name="to">The target vertex index.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="from"/> or <paramref name="to"/> is negative.</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void AddArcAndVertices (int from, int to)
 		{
@@ -61,6 +90,12 @@ namespace Graphs.NET.Core
 			InsertArc(from, to);
 		}
 
+		/// <summary>
+		/// Adds an undirected edge (two opposite directed arcs) between two existing vertices.
+		/// </summary>
+		/// <param name="v1">The first vertex index.</param>
+		/// <param name="v2">The second vertex index.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Thrown when either vertex index is negative or does not exist in the builder.</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void AddEdge (int v1, int v2)
 		{
@@ -81,6 +116,12 @@ namespace Graphs.NET.Core
 			InsertArc(v2, v1);
 		}
 
+		/// <summary>
+		/// Adds an undirected edge (two opposite directed arcs) between two vertices, automatically creating either vertex if it does not yet exist.
+		/// </summary>
+		/// <param name="v1">The first vertex index.</param>
+		/// <param name="v2">The second vertex index.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="v1"/> or <paramref name="v2"/> is negative.</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void AddEdgeAndVertices (int v1, int v2)
 		{
@@ -97,6 +138,11 @@ namespace Graphs.NET.Core
 			InsertArc(v2, v1);
 		}
 
+		/// <summary>
+		/// Registers a vertex with the specified index if it does not already exist.
+		/// </summary>
+		/// <param name="vertex">The zero-based vertex index.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="vertex"/> is negative.</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void AddVertex (int vertex)
 		{
@@ -107,6 +153,11 @@ namespace Graphs.NET.Core
 			CreateVertexIfNotExists(vertex);
 		}
 
+		/// <summary>
+		/// Registers multiple vertices from the specified span.
+		/// </summary>
+		/// <param name="vertices">A span of zero-based vertex indices to add.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Thrown when any vertex index in <paramref name="vertices"/> is negative.</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void AddVertices(ReadOnlySpan<int> vertices)
 		{
@@ -118,6 +169,7 @@ namespace Graphs.NET.Core
 			int maxVertex = -1;
 			for ( int vertexIndex = 0; vertexIndex < vertices.Length; vertexIndex++ )
 			{
+				ArgumentOutOfRangeException.ThrowIfNegative(vertices[vertexIndex]);
 				maxVertex = Math.Max(maxVertex, vertices[vertexIndex]);
 			}
 
@@ -131,9 +183,18 @@ namespace Graphs.NET.Core
 			}
 		}
 
+		/// <summary>
+		/// Builds an immutable <see cref="Graph"/> using <see cref="GraphBuildingOptions.Default"/>.
+		/// </summary>
+		/// <returns>A compact CSR <see cref="Graph"/> instance.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public virtual Graph Build () => Build(GraphBuildingOptions.Default);
 
+		/// <summary>
+		/// Builds an immutable <see cref="Graph"/> using the specified <paramref name="options"/>.
+		/// </summary>
+		/// <param name="options">The immutable options controlling reflexive and duplicate arc filtering.</param>
+		/// <returns>A compact CSR <see cref="Graph"/> instance.</returns>
 		public virtual Graph Build (GraphBuildingOptionsFixed options)
 		{
 			if ( VertexCount == 0 )
@@ -204,6 +265,13 @@ namespace Graphs.NET.Core
 			}
 		}
 
+		/// <summary>
+		/// Determines whether a directed arc exists from <paramref name="from"/> to <paramref name="to"/>.
+		/// </summary>
+		/// <param name="from">The source vertex index.</param>
+		/// <param name="to">The target vertex index.</param>
+		/// <returns><see langword="true"/> if the arc exists; otherwise, <see langword="false"/>.</returns>
+		/// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="from"/> or <paramref name="to"/> is negative.</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool HasArc (int from, int to)
 		{
@@ -229,6 +297,12 @@ namespace Graphs.NET.Core
 
 		}
 
+		/// <summary>
+		/// Determines whether a vertex with the specified index exists in the builder.
+		/// </summary>
+		/// <param name="vertex">The vertex index to check.</param>
+		/// <returns><see langword="true"/> if the vertex is active; otherwise, <see langword="false"/>.</returns>
+		/// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="vertex"/> is negative.</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool HasVertex (int vertex)
 		{
@@ -237,6 +311,12 @@ namespace Graphs.NET.Core
 			return vertex < VertexCapacity && _activeVertices[vertex] == 1;
 		}
 
+		/// <summary>
+		/// Removes a single directed arc from <paramref name="from"/> to <paramref name="to"/> if it exists.
+		/// </summary>
+		/// <param name="from">The source vertex index.</param>
+		/// <param name="to">The target vertex index.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="from"/> or <paramref name="to"/> is negative.</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public virtual void RemoveArc (int from, int to)
 		{
@@ -259,6 +339,7 @@ namespace Graphs.NET.Core
 			if ( _targets[pointer] == to )
 			{
 				_tails[from] = _nexts[pointer];
+				UpdateFreeList(pointer);
 				ArcCount--;
 				return;
 			}
@@ -271,7 +352,7 @@ namespace Graphs.NET.Core
 				if ( _targets[pointer] == to )
 				{
 					_nexts[previousPointer] = _nexts[pointer];
-					_nexts[pointer] = -1;
+					UpdateFreeList(pointer);
 					ArcCount--;
 					return;
 				}
@@ -280,6 +361,11 @@ namespace Graphs.NET.Core
 			}
 		}
 
+		/// <summary>
+		/// Removes the specified <paramref name="vertex"/> and all incident incoming and outgoing arcs.
+		/// </summary>
+		/// <param name="vertex">The vertex index to remove.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="vertex"/> is negative.</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public virtual void RemoveVertex (int vertex)
 		{
@@ -298,8 +384,10 @@ namespace Graphs.NET.Core
 			int pointer = _tails[vertex];
 			while ( pointer != -1 )
 			{
+				int next = _nexts[pointer];
+				UpdateFreeList(pointer);
 				removedArcs++;
-				pointer = _nexts[pointer];
+				pointer = next;
 			}
 			_tails[vertex] = -1;
 
@@ -311,8 +399,10 @@ namespace Graphs.NET.Core
 
 					while ( pointer != -1 && _targets[pointer] == vertex )
 					{
-						pointer = _nexts[pointer];
+						int next = _nexts[pointer];
+						UpdateFreeList(pointer);
 						removedArcs++;
+						pointer = next;
 					}
 
 					_tails[currentVertex] = pointer;
@@ -330,8 +420,9 @@ namespace Graphs.NET.Core
 
 						if ( _targets[pointer] == vertex )
 						{
-							_nexts[previousPointer] = nextPointer;
+							UpdateFreeList(pointer);
 							removedArcs++;
+							_nexts[previousPointer] = nextPointer;
 						}
 						else
 						{
@@ -345,7 +436,7 @@ namespace Graphs.NET.Core
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void EnsureArcCapacityOrResize (int capacity)
+		private protected void EnsureArcCapacityOrResize (int capacity)
 		{
 			if ( capacity <= ArcCapacity )
 			{
@@ -360,7 +451,7 @@ namespace Graphs.NET.Core
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void EnsureVertexCapacityOrResize (int capacity)
+		private protected void EnsureVertexCapacityOrResize (int capacity)
 		{
 			if ( capacity <= VertexCapacity )
 			{
@@ -375,19 +466,30 @@ namespace Graphs.NET.Core
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected int InsertArc (int from, int to)
+		private protected int InsertArc (int from, int to)
 		{
-			_targets[_newArcIndex] = to;
-			_nexts[_newArcIndex] = _tails[from];
-			_tails[from] = _newArcIndex;
+			int arcIndex;
+			if ( _freeListTail != -1 )
+			{
+				arcIndex = _freeListTail;
+				_freeListTail = _nexts[_freeListTail];
+			}
+			else
+			{
+				arcIndex = _newArcIndex++;
+			}
+
+			_targets[arcIndex] = to;
+			_nexts[arcIndex] = _tails[from];
+			_tails[from] = arcIndex;
 
 			ArcCount++;
 
-			return _newArcIndex++;
+			return arcIndex;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void CreateVertexIfNotExists (int vertex)
+		private protected void CreateVertexIfNotExists (int vertex)
 		{
 			if ( _activeVertices[vertex] == 0 )
 			{
@@ -397,20 +499,27 @@ namespace Graphs.NET.Core
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected virtual void ResizeArcs (int newCapacity)
+		private protected virtual void ResizeArcs (int newCapacity)
 		{
 			Array.Resize(ref _targets, newCapacity);
 			Array.Resize(ref _nexts, newCapacity);
-			_nexts.AsSpan(ArcCount, newCapacity - ArcCount).Fill(-1);
+			_nexts.AsSpan(_newArcIndex, newCapacity - _newArcIndex).Fill(-1);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected virtual void ResizeVertices (int oldCapacity, int newCapacity)
+		private protected virtual void ResizeVertices (int oldCapacity, int newCapacity)
 		{
 			OneBitArray.Resize(ref _activeVertices, newCapacity);
 
 			Array.Resize(ref _tails, newCapacity);
 			_tails.AsSpan(oldCapacity, newCapacity - oldCapacity).Fill(-1);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private protected void UpdateFreeList (int newTail)
+		{
+			_nexts[newTail] = _freeListTail;
+			_freeListTail = newTail;
 		}
 	}
 }
