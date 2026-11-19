@@ -9,7 +9,4 @@
     <File Path="global.json" />
     <Project Path="Tests/Tests.csproj" />
   </Folder>
-  <Folder Name="/Analyzers/">
-    <Project Path="Analyzers/Analyzers.csproj" />
-  </Folder>
 </Solution>
