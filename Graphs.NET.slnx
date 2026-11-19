@@ -1,8 +1,12 @@
 <Solution>
+  <Folder Name="/Benchmarks/">
+    <Project Path="Benchmarks/Benchmarks.csproj" />
+  </Folder>
   <Folder Name="/src/">
-    <Project Path="Graphs.NET/Graphs.NET.csproj" />
+    <Project Path="src/Graphs.NET.csproj" />
   </Folder>
   <Folder Name="/Tests/">
-    <Project Path="GraphUnitTests/GraphUnitTests.csproj" />
+    <File Path="global.json" />
+    <Project Path="Tests/Tests.csproj" />
   </Folder>
 </Solution>

@@ -1,0 +1,77 @@
+﻿using System;
+using System.Collections.Generic;
+using BenchmarkDotNet.Attributes;
+using Benchmarks.Extensions;
+using Graphs.NET.Algorithms;
+using Graphs.NET.Core;
+using Microsoft.VSDiagnostics;
+using QuikGraph;
+using QuikGraph.Algorithms;
+
+namespace Benchmarks.Algorithms
+{
+	[CPUUsageDiagnoser]
+	
+	
+	
+	public class ContainCycleAlgorithmBenchmark
+	{
+		[Params(10)]
+		public int VertexCount;
+		[Params(10)]
+		public int ArcCount;
+
+		private GraphBuilder _graphBuilder;
+		private Graph _graph;
+		private Dictionary<int, List<int>> _naiveGraph;
+		private AdjacencyGraph<int, Edge<int>> _quikGraphBuilder;
+		private CompressedSparseRowGraph<int> _quikGraph;
+
+		[GlobalSetup]
+		public void Setup ()
+		{
+			Random random = new(42);
+
+			_graphBuilder = new GraphBuilder(VertexCount, ArcCount);
+			_naiveGraph = new Dictionary<int, List<int>>(VertexCount);
+			_quikGraphBuilder = new AdjacencyGraph<int, Edge<int>>(true);
+
+			for ( int i = 0; i < ArcCount; i++ )
+			{
+				int from = random.Next(0, VertexCount), to = random.Next(0, VertexCount);
+
+				_graphBuilder.AddArcAndVertices(from, to);
+
+				if ( !_naiveGraph.TryGetValue(from, out List<int> value) )
+				{
+					value = [];
+					_naiveGraph.Add(from, value);
+				}
+
+				value.Add(to);
+
+				_quikGraphBuilder.AddVerticesAndEdge(new Edge<int>(from, to));
+			}
+			_graph = _graphBuilder.Build();
+			_quikGraph = _quikGraphBuilder.ToCompressedRowGraph();
+		}
+
+		[Benchmark]
+		public bool Naive_CycleDetection ()
+		{
+			return NaiveGraphExtensions.RunNaiveCycleDetection(_naiveGraph, VertexCount);
+		}
+
+		[Benchmark]
+		public bool QuikGraph_CycleDetection ()
+		{
+			return !_quikGraph.IsDirectedAcyclicGraph();
+		}
+
+		[Benchmark(Baseline = true)]
+		public bool GraphsNET_CycleDetection ()
+		{
+			return GraphAlgorithmsExtensions.CalculateIsAcyclic(_graph);
+		}
+	}
+}

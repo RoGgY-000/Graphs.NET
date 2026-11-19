@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<IsAotCompatible>true</IsAotCompatible>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<PackageId>Graphs.NET</PackageId>
+		<Version>0.1.0-alpha</Version>
+		<Authors>RoGgY</Authors>
+		<Description>A high-performance, zero-allocation, Native AOT-ready graph library for .NET 10+ using Compressed Sparse Row (CSR) storage and bit-packed state primitives.</Description>
+		<PackageTags>graph;graphs;algorithms;csr;aot;nativeaot;zero-allocation;span;high-performance;</PackageTags>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<RepositoryUrl>https://github.com/RoGgY-000/Graphs.NET</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="..\README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+			<_Parameter1>Tests</_Parameter1>
+		</AssemblyAttribute>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+			<_Parameter1>Benchmarks</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
+
+</Project>
