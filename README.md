@@ -100,15 +100,48 @@ if (graph.TryTopologicalSort(sorted))
 
 ## Benchmarks
 
-*Benchmarks measured on .NET 10 using BenchmarkDotNet.*
+*Benchmarks measured on .NET 10.0.13 (X64 RyuJIT AVX2) using BenchmarkDotNet v0.15.8 against a standard `Dictionary<int, List<int>>` (`Naive`) baseline and `QuikGraph`.*
 
-| Method | Vertices | Arcs | Mean | Allocated |
+### 1. Extreme Scale: Adding 100 Million Arcs
+
+| Vertex Capacity | Arcs | Naive (`Dictionary` + `List`) | `Graphs.NET` (`GraphBuilder`) | Speedup |
 | :--- | :--- | :--- | :--- | :--- |
-| `GraphBuilder.Build` | 1,000,000 | 5,000,000 | *... ms* | *... MB* |
-| `Graph.IsAcyclic` | 1,000,000 | 5,000,000 | *... ms* | **0 B** |
-| `Graph.TryTopologicalSort` | 1,000,000 | 5,000,000 | *... ms* | **0 B** |
+| 1,000,000 | 1,000,000 | 305.99 ms | **18.07 ms** | **16.9x faster** |
+| 1,000,000 | 10,000,000 | 2,018.00 ms | **121.21 ms** | **16.6x faster** |
+| 1,000,000 | 100,000,000 | 16,100.00 ms | **1,113.00 ms** | **14.5x faster** |
+| 10,000,000 | 10,000,000 | 5,576.00 ms | **291.13 ms** | **19.2x faster** |
+| 10,000,000 | 100,000,000 | 42,788.00 ms | **2,313.00 ms** | **18.5x faster** |
+| 100,000,000 | 100,000,000 | 80,760.00 ms *(1.346 m)* | **4,348.00 ms** | **18.6x faster** |
 
-*(Update with your BenchmarkDotNet results)*
+---
+
+### 2. Graph Construction (`GraphBuilder.Build` vs `QuikGraph`)
+
+Comparing packing a populated builder into an immutable Compressed Sparse Row (`Graph`) vs `QuikGraph`'s `ToCompressedSparseRowGraph()` and `ToArrayAdjacencyGraph()`:
+
+| Vertices | Arcs | `QuikGraph` (ArrayAdjacency) | `QuikGraph` (CSR) | `Graphs.NET` (`Build`) | Speedup vs QuikGraph CSR |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 1,000 | 1,000 | 20.31 μs | 18.16 μs | **3.69 μs** | **4.9x faster** |
+| 1,000 | 5,000 | 39.67 μs | 34.69 μs | **17.52 μs** | **2.0x faster** |
+| 5,000 | 1,000 | 37.64 μs | 34.49 μs | **14.18 μs** | **2.4x faster** |
+| 5,000 | 5,000 | 469.82 μs | 193.18 μs | **37.43 μs** | **5.2x faster** |
+| 5,000 | 10,000 | 619.32 μs | 242.05 μs | **85.73 μs** | **2.8x faster** |
+| 10,000 | 5,000 | 627.93 μs | 280.03 μs | **61.78 μs** | **4.5x faster** |
+| 10,000 | 10,000 | 1,115.00 μs | 434.57 μs | **103.38 μs** | **4.2x faster** |
+
+---
+
+### 3. Batch Vertex & Undirected Edge Insertion
+
+| Operation | Scale | `QuikGraph` | `Naive` | `Graphs.NET` | Speedup vs QuikGraph |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Add Undirected Edges** | 1,000 V / 1,000 E | 82.18 μs | 23.05 μs | **5.44 μs** | **15.1x faster** |
+| **Add Undirected Edges** | 1,000 V / 5,000 E | 991.81 μs | 121.51 μs | **37.62 μs** | **26.4x faster** |
+| **Add Undirected Edges** | 1,000 V / 10,000 E | 2,227.00 μs | 232.31 μs | **85.88 μs** | **25.9x faster** |
+| **Add Undirected Edges** | 5,000 V / 10,000 E | 2,718.00 μs | 544.27 μs | **94.91 μs** | **28.6x faster** |
+| **Add Vertices (Batch)** | 100,000 V | 6,364.00 μs | 6,534.00 μs | **469.94 μs** | **13.5x faster** |
+| **Add Vertices (Batch)** | 500,000 V | 29,100.00 μs | 34,691.00 μs | **2,561.00 μs** | **11.4x faster** |
+| **Add Vertices (Batch)** | 1,000,000 V | 74,807.00 μs | 69,896.00 μs | **5,516.00 μs** | **13.6x faster** |
 
 ---
 
