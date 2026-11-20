@@ -1,23 +1,19 @@
 # Graphs.NET
 
-[![NuGet](https://shields.io)](https://nuget.org)
-[![License: MIT](https://shields.io)](LICENSE)
-[![.NET](https://shields.io)](https://microsoft.com)
-
-A high-performance, zero-allocation, Native AOT-ready graph library for **.NET 10+** built on Compressed Sparse Row (CSR) storage and custom bit-packed state primitives.
+A high-performance, zero-allocation, Native AOT-ready graph library for **.NET 10+** built on graph-specialized structures like Compressed Sparse Row (CSR) and forward star.
 
 Designed for large-scale graphs (tens to hundreds of millions of vertices) where traditional object-oriented graph libraries suffer from heavy memory overhead and GC pressure.
 
-> **Status:** Alpha (`v0.1.0-alpha`). The core CSR storage engine, bit-packed state primitives, and initial topological algorithms are complete and covered by unit tests (>95% line coverage) and BenchmarkDotNet suites.
+> **Status:** Alpha (`v0.1.0-alpha`). The core CSR storage engine, bit-packed state primitives, and initial algorithms are complete and covered by unit tests (>95% line coverage) and BenchmarkDotNet suites.
 
 ---
 
 ## Key Features
 
 * **Compressed Sparse Row (CSR) Storage:** Immutable `Graph` instances store topology in flat, contiguous arrays (`_offsets` and `_targets`), maximizing CPU cache locality and eliminating per-vertex/per-edge heap allocations.
-* **Zero-Allocation Traversal:** Neighbor access returns `ReadOnlySpan<int>` directly over the underlying target buffer (`GetNeighbors(int vertex)`).
+* **Zero-Allocation Traversal:** Neighbor access returns sorted `ReadOnlySpan<int>` directly over the underlying target buffer (`GetNeighbors(int vertex)`).
 * **O(1) Arc Slot Recycling:** `GraphBuilder` uses an intrusive free-list over its internal edge buffer, reusing freed slots in `O(1)` time with zero extra allocations upon arc or vertex removal.
-* **Bit-Packed State Primitives:** Custom `OneBitArray` and stack/pool-friendly `TwoBitArraySpan` (`ref struct`) pack vertex states into 1 or 2 bits per vertex instead of `bool[]` or `HashSet<int>`.
+* **Bit-Packed State Primitives:** Custom `OneBitArray` and  `TwoBitArraySpan` (`ref struct`) pack vertex states into 1 or 2 bits per vertex instead of `bool[]` or `HashSet<int>`.
 * **Iterative Algorithms (No Recursion):** Graph traversals rely on pooled stacks (`ArrayPool<int>.Shared`), preventing `StackOverflowException` on deep graphs with millions of vertices.
 * **Native AOT Compatible:** Built without reflection or dynamic code generation (`<IsAotCompatible>true</IsAotCompatible>`).
 
