@@ -7,10 +7,6 @@ using QuikGraph.Algorithms;
 
 namespace Benchmarks.QuikGraph
 {
-	[CPUUsageDiagnoser]
-	
-	
-	
 	public class FastestQuikGraphTopologicalSortBenchmark
 	{
 		[Params(100)]

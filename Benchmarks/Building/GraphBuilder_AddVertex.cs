@@ -7,10 +7,6 @@ using QuikGraph;
 
 namespace Benchmarks.Building
 {
-	
-	
-	
-	
 	public abstract class GraphBuilder_AddVertex
 	{
 		public virtual int VertexCount { get; set; }

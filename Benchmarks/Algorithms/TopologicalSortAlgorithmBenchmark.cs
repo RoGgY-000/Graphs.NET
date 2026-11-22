@@ -10,10 +10,6 @@ using QuikGraph.Algorithms;
 
 namespace Benchmarks.Algorithms
 {
-	[CPUUsageDiagnoser]
-	
-	
-	
 	public class TopologicalSortAlgorithmBenchmark
 	{
 		[Params(1)]

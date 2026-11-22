@@ -10,10 +10,6 @@ using QuikGraph.Algorithms;
 
 namespace Benchmarks.Algorithms
 {
-	[CPUUsageDiagnoser]
-	
-	
-	
 	public class ContainCycleAlgorithmBenchmark
 	{
 		[Params(10)]
