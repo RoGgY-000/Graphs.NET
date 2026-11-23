@@ -6,6 +6,114 @@ namespace Benchmarks.Extensions
 	public static class NaiveGraphExtensions
 	{
 		/// <summary>
+		/// Наивный поиск кратчайшего пути в графе с использованием Queue, HashSet и Dictionary.
+		/// </summary>
+		/// <param name="graph">Граф в виде Dictionary.</param>
+		/// <param name="start">Начальная вершина.</param>
+		/// <param name="end">Целевая вершина.</param>
+		/// <param name="destination">Буфер для записи найденного пути.</param>
+		/// <param name="foundPathLength">Длина найденного пути в ребрах (или -1, если путь не найден).</param>
+		/// <returns>True, если путь существует; иначе False.</returns>
+		public static bool TryRunNaiveShortestPath (
+			Dictionary<int, List<int>> graph,
+			int start,
+			int end,
+			Span<int> destination,
+			out int foundPathLength)
+		{
+			if ( destination.IsEmpty )
+			{
+				throw new ArgumentException("destination span is empty", nameof(destination));
+			}
+
+			if ( start == end )
+			{
+				destination[0] = start;
+				foundPathLength = 0;
+				return true;
+			}
+
+			if ( destination.Length < 2 )
+			{
+				throw new ArgumentException("destination span is too short for path", nameof(destination));
+			}
+
+			// Выделяем память в куче под стандартные коллекции: очередь, посещенные вершины и карту предков
+			var queue = new Queue<int>();
+			var visited = new HashSet<int>();
+			var previousVertex = new Dictionary<int, int>();
+
+			queue.Enqueue(start);
+			visited.Add(start);
+
+			bool pathExists = false;
+
+			while ( queue.Count > 0 )
+			{
+				int vertex = queue.Dequeue();
+
+				// Поиск списка смежности по хеш-таблице — лишний промах по кэшу процессора
+				if ( graph.TryGetValue(vertex, out var neighbors) )
+				{
+					foreach ( int neighbor in neighbors )
+					{
+						if ( neighbor == end )
+						{
+							previousVertex[neighbor] = vertex;
+							pathExists = true;
+							break;
+						}
+
+						if ( visited.Add(neighbor) )
+						{
+							// Динамическое расширение Dictionary и Queue приводит к дополнительным аллокациям
+							previousVertex[neighbor] = vertex;
+							queue.Enqueue(neighbor);
+						}
+					}
+				}
+
+				if ( pathExists )
+				{
+					break;
+				}
+			}
+
+			if ( !pathExists )
+			{
+				foundPathLength = -1;
+				return false;
+			}
+
+			// Классическое восстановление пути через промежуточный List с последующим разворотом
+			var path = new List<int>();
+			int currentVertex = end;
+
+			while ( currentVertex != start )
+			{
+				path.Add(currentVertex);
+				currentVertex = previousVertex[currentVertex];
+			}
+
+			path.Add(start);
+
+			if ( path.Count > destination.Length )
+			{
+				throw new ArgumentException("destination span is too short for path", nameof(destination));
+			}
+
+			// Разворачиваем список и копируем в целевой буфер
+			path.Reverse();
+			for ( int i = 0; i < path.Count; i++ )
+			{
+				destination[i] = path[i];
+			}
+
+			foundPathLength = path.Count - 1;
+			return true;
+		}
+
+		/// <summary>
 		/// Наивный поиск циклов в ориентированном графе с использованием HashSet и рекурсии.
 		/// </summary>
 		/// <param name="graph">Граф в виде Dictionary.</param>
