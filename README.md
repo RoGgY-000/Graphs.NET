@@ -10,8 +10,6 @@ A high-performance, zero-allocation, Native AOT-ready graph library for **.NET 1
 
 Designed for large-scale graphs (tens to hundreds of millions of vertices) where traditional object-oriented graph libraries suffer from heavy memory overhead and GC pressure.
 
-> **Status:** Alpha (`v0.1.0-alpha`). The core CSR storage engine, bit-packed state primitives, and initial algorithms are complete and covered by unit tests (>95% line coverage) and BenchmarkDotNet suites.
-
 ---
 
 ## Key Features
@@ -144,19 +142,6 @@ Comparing packing a populated builder into an immutable Compressed Sparse Row (`
 | **Add Vertices (Batch)** | 100,000 V | 6,364.00 μs | 6,534.00 μs | **469.94 μs** | **13.5x faster** |
 | **Add Vertices (Batch)** | 500,000 V | 29,100.00 μs | 34,691.00 μs | **2,561.00 μs** | **11.4x faster** |
 | **Add Vertices (Batch)** | 1,000,000 V | 74,807.00 μs | 69,896.00 μs | **5,516.00 μs** | **13.6x faster** |
-
----
-
-## Roadmap
-
-- [x] CSR `Graph` representation & `GraphBuilder` with O(1) free-list slot reuse
-- [x] Bit-packed `OneBitArray` and `TwoBitArraySpan` primitives
-- [x] Iterative Cycle Detection (`IsAcyclic`) & `TryTopologicalSort`
-- [ ] Breadth-First Search (BFS) & unweighted shortest paths
-- [ ] Depth-First Search (DFS) & Connected Components
-- [ ] Strongly Connected Components (Tarjan's algorithm)
-- [ ] Bridges, Articulation Points & Bipartite graph detection
-- [ ] Weighted graphs & zero-overhead Generic Math policies (`Dijkstra`, `A*`, `Prim`, `Kruskal`)
 
 ---
 
