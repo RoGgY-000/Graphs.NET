@@ -181,7 +181,7 @@ namespace Benchmarks.Algorithms
 		public override int ArcCount { get; set; }
 	}
 
-	public class Extreme_Graph_ShortestPath : Graph_ShortestPath_Base
+	public class Extreme_Graph_ShortestPath : Graph_ShortestPath_WithNaive
 	{
 		[Params(1_000_000, 10_000_000, 100_000_000)]
 		public override int VertexCapacity { get; set; }

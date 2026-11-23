@@ -64,6 +64,12 @@ namespace Graphs.NET.Algorithms
 				return true;
 			}
 
+			if ( graph.GetNeighbors(start).IsEmpty )
+			{
+				foundPathLength = -1;
+				return false;
+			}
+
 			if ( destination.Length < 2 )
 			{
 				throw new ArgumentException("destination span is too short for path", nameof(destination));
