@@ -7,7 +7,7 @@
 		<IsAotCompatible>true</IsAotCompatible>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<PackageId>Graphs.NET</PackageId>
-		<Version>0.1.0-alpha</Version>
+		<Version>0.1.1-alpha</Version>
 		<Authors>RoGgY</Authors>
 		<Description>A high-performance, zero-allocation, Native AOT-ready graph library for .NET 10+ using Compressed Sparse Row (CSR) storage and bit-packed state primitives.</Description>
 		<PackageTags>graph;graphs;algorithms;csr;aot;nativeaot;zero-allocation;span;high-performance;</PackageTags>

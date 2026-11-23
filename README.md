@@ -1,4 +1,10 @@
-# Graphs.NET
+<h1 align="center">Graphs.NET</h1>
+
+<div align="center">
+
+[![NuGet Version](https://img.shields.io/nuget/vpre/Graphs.NET?style=flat-square&logo=nuget&logoColor=blue&color=blue)](https://nuget.org/packages/Graphs.NET)
+
+</div>
 
 A high-performance, zero-allocation, Native AOT-ready graph library for **.NET 10+** built on graph-specialized structures like Compressed Sparse Row (CSR) and forward star.
 
