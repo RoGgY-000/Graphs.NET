@@ -100,10 +100,10 @@ namespace Graphs.NET.Algorithms
 			{
 				bool pathExists = false;
 				queue[queueEnd++] = start;
+				visited[start] = 1;
 				while ( queueEnd > queueStart )
 				{
 					int vertex = queue[queueStart++];
-					visited[vertex] = 2;
 					ReadOnlySpan<int> neighbors = graph.GetNeighbors(vertex);
 					foreach ( int neighbor in neighbors )
 					{
@@ -198,6 +198,76 @@ namespace Graphs.NET.Algorithms
 			graph._isAcyclicCalculated = true;
 
 			return success;
+		}
+
+		/// <summary>
+		/// Computes the shortest distances (by edge count) from a given source vertex to all other vertices in the graph using breadth-first search.
+		/// </summary>
+		/// <param name="graph">The target graph.</param>
+		/// <param name="source">The index of the starting vertex.</param>
+		/// <param name="destination">
+		/// The buffer to write the shortest distances into, indexed by vertex index.
+		/// When this method returns, <c>destination[i]</c> contains the minimum number of edges from <paramref name="source"/> to vertex <c>i</c>
+		/// (<c>0</c> for <paramref name="source"/> itself), or <c>-1</c> if vertex <c>i</c> is unreachable or does not exist in <paramref name="graph"/>.
+		/// Must be large enough to accommodate the highest vertex index in <paramref name="graph"/>.
+		/// </param>
+		/// <exception cref="ArgumentOutOfRangeException">
+		/// Thrown when <paramref name="source"/> is negative or does not exist in <paramref name="graph"/>.
+		/// </exception>
+		/// <exception cref="ArgumentException">
+		/// Thrown when <paramref name="destination"/> is too short to hold distances for all vertex indices in <paramref name="graph"/>.
+		/// </exception>
+		public static void GetShortestDistances (this Graph graph, int source, Span<int> destination)
+		{
+			ArgumentOutOfRangeException.ThrowIfNegative(source, nameof(source));
+			ArgumentOutOfRangeException.ThrowIfGreaterThan(source, graph._maxVertexIndex, nameof(source));
+
+			if ( graph._activeVertices[source] == 0 )
+			{
+				throw new ArgumentOutOfRangeException(nameof(source), "the vertex does not exist in the given graph");
+			}
+			if ( destination.Length <= graph._maxVertexIndex )
+			{
+				throw new ArgumentException("destination span must be greater than graph max vertex", nameof(destination));
+			}
+
+			destination.Fill(-1);
+			destination[source] = 0;
+
+			if ( graph.GetNeighbors(source).IsEmpty )
+			{
+				return;
+			}
+
+			int queueStart = 0, queueEnd = 0;
+
+			ArrayPool<int> pool = ArrayPool<int>.Shared;
+
+			int[] queue = pool.Rent(graph.VertexCount);
+
+			try
+			{
+				queue[queueEnd++] = source;
+				while ( queueEnd > queueStart )
+				{
+					int vertex = queue[queueStart++];
+					ReadOnlySpan<int> neighbors = graph.GetNeighbors(vertex);
+					foreach ( int neighbor in neighbors )
+					{
+						int currentDistance = destination[vertex] + 1;
+
+						if ( destination[neighbor] == -1 )
+						{
+							destination[neighbor] = currentDistance;
+							queue[queueEnd++] = neighbor;
+						}
+					}
+				}
+			}
+			finally
+			{
+				pool.Return(queue);
+			}
 		}
 
 		internal static void TopologicalSortInCertainlyAcyclicGraph (Graph g, Span<int> destination)

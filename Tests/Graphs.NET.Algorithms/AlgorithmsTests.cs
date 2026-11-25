@@ -36,6 +36,23 @@ namespace Tests.Graphs.NET.Algorithms
 		[Theory]
 		[MemberData(nameof(GraphTestData.GetGraphsAndExpected), MemberType = typeof(GraphTestData))]
 		[MemberData(nameof(GraphTestData.GetRandomGraphsAndExpected), MemberType = typeof(GraphTestData))]
+		public void DistanceTree (Graph graph, ExpectedGraph expected)
+		{
+			Span<int> spanForGraph = expected.VertexCount > 0 ? new int[expected.VerticesAndArcs.Keys.Max() + 1].AsSpan() : Span<int>.Empty;
+			Span<int> spanForNaive = expected.VertexCount > 0 ? new int[expected.VerticesAndArcs.Keys.Max() + 1].AsSpan() : Span<int>.Empty;
+
+			foreach ( int start in expected.VerticesAndArcs.Keys )
+			{
+				NaiveGraphExtensions.RunNaiveShortestDistances(expected.VerticesAndArcs, start, spanForNaive);
+				graph.GetShortestDistances(start, spanForGraph);
+
+				Assert.True(spanForNaive.SequenceEqual(spanForGraph));
+			}
+		}
+
+		[Theory]
+		[MemberData(nameof(GraphTestData.GetGraphsAndExpected), MemberType = typeof(GraphTestData))]
+		[MemberData(nameof(GraphTestData.GetRandomGraphsAndExpected), MemberType = typeof(GraphTestData))]
 		public void TopologicalSort (Graph graph, ExpectedGraph expected)
 		{
 			Span<int> spanForGraph = new int[expected.VertexCount].AsSpan();

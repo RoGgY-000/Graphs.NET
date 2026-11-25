@@ -111,6 +111,48 @@
 		}
 
 		/// <summary>
+		/// Наивный поиск кратчайших расстояний от одной вершины до всех остальных с использованием Queue и HashSet.
+		/// </summary>
+		/// <param name="graph">Граф в виде Dictionary.</param>
+		/// <param name="source">Начальная вершина.</param>
+		/// <param name="destination">Буфер для записи расстояний (индексированный по номеру вершины).</param>
+		public static void RunNaiveShortestDistances (
+			Dictionary<int, int[]> graph,
+			int source,
+			Span<int> destination)
+		{
+			destination.Fill(-1);
+			destination[source] = 0;
+
+			// Выделяем память в куче под стандартные коллекции
+			var queue = new Queue<int>();
+			var visited = new HashSet<int>();
+
+			queue.Enqueue(source);
+			visited.Add(source);
+
+			while ( queue.Count > 0 )
+			{
+				int vertex = queue.Dequeue();
+				int nextDistance = destination[vertex] + 1;
+
+				// Поиск списка смежности по хеш-таблице — лишний промах по кэшу процессора
+				if ( graph.TryGetValue(vertex, out var neighbors) )
+				{
+					foreach ( int neighbor in neighbors )
+					{
+						// Динамическое расширение HashSet и Queue приводит к дополнительным аллокациям
+						if ( visited.Add(neighbor) )
+						{
+							destination[neighbor] = nextDistance;
+							queue.Enqueue(neighbor);
+						}
+					}
+				}
+			}
+		}
+
+		/// <summary>
 		/// Наивный поиск циклов в ориентированном графе с использованием HashSet и рекурсии.
 		/// </summary>
 		/// <param name="graph">Граф в виде Dictionary.</param>
