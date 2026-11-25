@@ -317,7 +317,6 @@ namespace Graphs.NET.Core
 		/// <param name="from">The source vertex index.</param>
 		/// <param name="to">The target vertex index.</param>
 		/// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="from"/> or <paramref name="to"/> is negative.</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public virtual void RemoveArc (int from, int to)
 		{
 			ArgumentOutOfRangeException.ThrowIfNegative(from);
@@ -366,7 +365,6 @@ namespace Graphs.NET.Core
 		/// </summary>
 		/// <param name="vertex">The vertex index to remove.</param>
 		/// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="vertex"/> is negative.</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public virtual void RemoveVertex (int vertex)
 		{
 			ArgumentOutOfRangeException.ThrowIfNegative(vertex);
