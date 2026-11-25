@@ -11,7 +11,7 @@
 		/// <summary>
 		/// Gets the default fixed options with both reflexive and duplicate arcs enabled.
 		/// </summary>
-		public static GraphBuildingOptionsFixed Default { get; } = new GraphBuildingOptions().Fix();
+		public static readonly GraphBuildingOptionsFixed Default = new GraphBuildingOptions().Fix();
 
 		/// <summary>
 		/// Excludes reflexive arcs (self-loops where source equals target) from the built graph.

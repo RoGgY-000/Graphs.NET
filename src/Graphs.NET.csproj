@@ -7,9 +7,9 @@
 		<IsAotCompatible>true</IsAotCompatible>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<PackageId>Graphs.NET</PackageId>
-		<Version>0.1.1-alpha</Version>
+		<Version>0.1.2</Version>
 		<Authors>RoGgY</Authors>
-		<Description>A high-performance, zero-allocation, Native AOT-ready graph library for .NET 10+ using Compressed Sparse Row (CSR) storage and bit-packed state primitives.</Description>
+		<Description>A high-performance, zero-allocation, nativeAOT-ready graph library for .NET 10+ built on graph-specialized structures like compressed sparse row (CSR) and forward star.</Description>
 		<PackageTags>graph;graphs;algorithms;csr;aot;nativeaot;zero-allocation;span;high-performance;</PackageTags>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<RepositoryUrl>https://github.com/RoGgY-000/Graphs.NET</RepositoryUrl>
